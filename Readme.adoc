@@ -1,0 +1,7 @@
+= CLTLogger
+François Lamboley <francois.lamboley@happn.com>
+
+A simple SwiftLog-compatible logger designed for Command Line Tools.
+
+== Usage
+TODO
