@@ -24,10 +24,11 @@ public struct CLTLogger : LogHandler {
 	public let fdMap: [Logger.Level: FileDescriptor]
 	
 	public init() {
+		/* Sadly, standardOutput and standardError are not available in 0.0.1 */
 		self.init(fdChanges: [
-			.trace:    .standardOutput,
+			.trace:    FileDescriptor.init(rawValue: 1), //.standardOutputs,
 			/* Below warning, logs to stdout */
-			.warning:  .standardError,
+			.warning:  FileDescriptor.init(rawValue: 2)  //.standardError,
 			/* Above and including warning, logs to stderr */
 		])
 	}
