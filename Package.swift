@@ -3,7 +3,7 @@ import PackageDescription
 
 
 let package = Package(
-	name: "CLTLogger",
+	name: "clt-logger",
 	platforms: [
 		.macOS(.v10_12)
 	],
