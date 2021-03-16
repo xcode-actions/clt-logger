@@ -12,7 +12,7 @@ let package = Package(
 	],
 	dependencies: [
 		.package(url: "https://github.com/apple/swift-log.git", from: "1.4.2"),
-		.package(url: "https://github.com/apple/swift-system.git", .branch("main")) /* Sadly, standardOutput and standardError are not available in 0.0.1 */
+		.package(url: "https://github.com/apple/swift-system.git", .revision("2ac0cdc24beff8af664c632f5ab352ec8ba8d068")) /* Sadly, standardOutput and standardError are not available in 0.0.1 */
 	],
 	targets: [
 		.target(name: "CLTLogger", dependencies: [
