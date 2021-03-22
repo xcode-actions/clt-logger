@@ -22,6 +22,15 @@ final class CLTLoggerTests: XCTestCase {
 		XCTAssertEqual(.error, logger2.logLevel)
 		XCTAssertEqual("first",  logger1[metadataKey: "only-on"])
 		XCTAssertEqual("second", logger2[metadataKey: "only-on"])
+		
+//		logger1.logLevel = .trace
+//		logger1.trace("trace: Hello, everything is broken! You have to fix it.")
+//		logger1.debug("debug: Hello, everything is broken! You have to fix it.")
+//		logger1.info("info: Hello, everything is broken! You have to fix it.")
+//		logger1.notice("notice: Hello, everything is broken! You have to fix it.")
+//		logger1.warning("warning: Hello, everything is broken! You have to fix it.")
+//		logger1.error("error: Hello, everything is broken! You have to fix it.")
+//		logger1.critical("critical: Hello, everything is broken! You have to fix it.")
 	}
 	
 }

@@ -10,50 +10,112 @@ A logger designed for Command Line Tools.
 
 A few things:
 - Output is UTF8. Always.
-- If the write syscall fails, the log is lost (except interrupts which are
+- There is no buffering. We use `write(2)`.
+- Ouptuts to stderr by default. The idea is: “usable” text (text that is
+actually what the user asked for when launching your tool) should be outputted
+to stdout, presumably using `print`, the rest should be on stderr. If needed you
+can setup the logger to use any fd, the logger will simply `write(2)` to it.
+- Ouptut has special control chars for colors if program is not compiled w/
+Xcode and output fd is a tty. You can force using or force not using colors.
+- If the write syscall fails, the log is lost (or partially lost; interrupts are
 retried; see SystemPackage for more info).
-- Default CLTLogger (no-args init) will log everything below warning (excluded)
-to stdout, and everything above warning (included) to stderr.
-- The logger uses an os\_unfair\_lock which might not be available outside macOS
-unfortunately (untested).
-- You can configure the logger to automatically add a new line after each
-message. By default, new lines are not added. */
+- You can configure the logger not to automatically add a new line after each
+message. By default, new lines are added.
+- As this logger is specially dedicated to CLT programs, the text it outputs is
+as small as possible on purpose: only the message is displayed, w/ a potential
+prefix indicating the log level (or a color if colors are allowed).
+
+A § (Xcode is dumb and needs a § here for the comment to be properly formatted).
+
+- Note: An interesting logger is `Adorkable/swift-log-format-and-pipe`. I almost
+used it (by creating extensions for a clt format and co), but ultimately
+dismissed it because:
+- Despite its name (which contains formatter), you are not free to choose the
+log format: every message is ended w/ a `\n` (the LoggerTextOutputStreamPipe
+adds the new-line directly). The only way to bypass this would be to create a
+new pipe.
+- It does not seems to be updated anymore (latest commit is from 2 years ago and
+some code they duplicated from `apple/swift-log` has not been updated).
+- To log w/o buffering (as one should for a logger?) you also have to create a
+new pipe.
+- Overall I love the idea of the project, but I’m not fond of the realization.
+It is a feeling; I’m not sure of the reasons behind it. Might be related to the
+fact that we cannot use the project as-is, or that the genericity the Adorkable
+logger introduces is not really needed (creating a log handler is not complex). */
 public struct CLTLogger : LogHandler {
+	
+	public static var defaultTextPrefixesByLogLevel: [Logger.Level: String] = {
+		return [
+			.trace:    "TRACE: ",
+			.debug:    "DEBUG: ",
+			.info:     "INFO: ",
+			.notice:   "* NOTICE: ",
+			.warning:  "*** WARNING: ",
+			.error:    "***** ERROR: ",
+			.critical: "******* CRITICAL: "
+		]
+	}()
+	
+	public static var defaultEmojiPrefixesByLogLevel: [Logger.Level: String] = {
+		return [
+			.trace:    "💩 ",
+			.debug:    "⚙️ ",
+			.info:     "📔 ",
+			.notice:   "🗣 ",
+			.warning:  "⚠️ ",
+			.error:    "❗️ ",
+			.critical: "‼️ "
+		]
+	}()
+	
+	public static var defaultColorPrefixesByLogLevel: [Logger.Level: String] = {
+		return [
+			.trace:    "\u{1B}[0;37m", /* White */
+			.debug:    "\u{1B}[0;33m", /* Yellow */
+			.info:     "\u{1B}[0;32m", /* Green */
+			.notice:   "\u{1B}[0;34m", /* Blue */
+			.warning:  "\u{1B}[0;31m", /* Red */
+			.error:    "\u{1B}[1;31m", /* Bold red */
+			.critical: "\u{1B}[41m\u{1B}[1;37m" /* Bold white on red bg */
+		]
+	}()
+	
+	public enum PrefixStyle {
+		case text
+		case emoji
+		case color
+		
+		/** Choose text, emoji or color automatically depending on context */
+		case auto
+	}
 	
 	public var logLevel: Logger.Level = .info
 	public var metadata: Logger.Metadata = [:]
-	public var messageTerminator: String
 	
-	public let fdMap: [Logger.Level: FileDescriptor]
+	public let outputFileDescriptor: FileDescriptor
+	public let logPrefixesByLevel: [Logger.Level: String]
+	public var logSuffix: String
 	
-	public init(messageTerminator: String = "") {
-		/* Sadly, standardOutput and standardError are not available in 0.0.1 */
-		self.init(fdChanges: [
-			.trace:    FileDescriptor.init(rawValue: 1), //.standardOutput,
-			/* Below warning, logs to stdout */
-			.warning:  FileDescriptor.init(rawValue: 2)  //.standardError,
-			/* Above and including warning, logs to stderr */
-		], messageTerminator: messageTerminator)
-	}
-	
-	public init(fdChanges: [Logger.Level: FileDescriptor?], messageTerminator: String = "") {
-		var fdMap = [Logger.Level: FileDescriptor]()
+	/* Sadly, FileDescriptor.standardError is not available in 0.0.1 */
+	public init(fd: FileDescriptor = .init(rawValue: 2), logPrefixStyle: PrefixStyle = .auto, logSuffix: String = "\n") {
+		let logPrefixStyle = (logPrefixStyle != .auto ? logPrefixStyle : (CLTLogger.shouldEnableColors(for: fd) ? .color : .emoji))
 		
-		var currentFileDescriptor: FileDescriptor?
-		for l in Logger.Level.allCases {
-			if let newFd = fdChanges[l] {
-				currentFileDescriptor = newFd
-			}
-			if let fd = currentFileDescriptor {
-				fdMap[l] = fd
-			}
+		let logPrefixesByLevel: [Logger.Level: String]
+		switch logPrefixStyle {
+			case .text:  logPrefixesByLevel = CLTLogger.defaultTextPrefixesByLogLevel
+			case .emoji: logPrefixesByLevel = CLTLogger.defaultEmojiPrefixesByLogLevel
+			case .color: logPrefixesByLevel = CLTLogger.defaultColorPrefixesByLogLevel
+			case .auto: fatalError()
 		}
-		self.init(fdMap: fdMap, messageTerminator: messageTerminator)
+		let logSuffix = (logPrefixStyle == .color ? "\u{1B}[0m" : "") + logSuffix
+		
+		self.init(fd: fd, logPrefixesByLevel: logPrefixesByLevel, logSuffix: logSuffix)
 	}
 	
-	public init(fdMap: [Logger.Level: FileDescriptor], messageTerminator: String = "") {
-		self.fdMap = fdMap
-		self.messageTerminator = messageTerminator
+	public init(fd: FileDescriptor = .init(rawValue: 2), logPrefixesByLevel: [Logger.Level: String], logSuffix: String = "\n") {
+		self.outputFileDescriptor = fd
+		self.logPrefixesByLevel = logPrefixesByLevel
+		self.logSuffix = logSuffix
 	}
 	
 	public subscript(metadataKey metadataKey: String) -> Logger.Metadata.Value? {
@@ -62,17 +124,45 @@ public struct CLTLogger : LogHandler {
 	}
 	
 	public func log(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata?, source: String, file: String, function: String, line: UInt) {
-		guard let fd = fdMap[level] else {return}
+		let prefix = logPrefixesByLevel[level] ?? ""
 		
-		let data = Data((message.description + messageTerminator).utf8)
+		let data = Data((prefix + message.description + logSuffix).utf8)
 		
-		/* flockfile is only available for FILE operations, not fd. */
+		/* We lock, because the writeAll function might split the write in more
+		 * than 1 write (if the write system call only writes a part of the data).
+		 * If another part of the program writes to fd, we might get interleaved
+		 * data, because they cannot be aware of our lock (and we cannot be aware
+		 * of theirs if they have one). */
+		#if canImport(Darwin)
 		os_unfair_lock_lock(&CLTLogger.lock)
+		#else
+		CLTLogger.lock.lock()
+		#endif
+		
 		/* Is there a better idea than silently drop the message in case of fail? */
-		_ = try? fd.writeAll(data)
+		_ = try? outputFileDescriptor.writeAll(data)
+		
+		#if canImport(Darwin)
 		os_unfair_lock_unlock(&CLTLogger.lock)
+		#else
+		CLTLogger.lock.unlock()
+		#endif
 	}
 	
+	private static func shouldEnableColors(for fd: FileDescriptor) -> Bool {
+		#if Xcode
+		/* Xcode runs program in a tty, but does not support colors */
+		return false
+		#else
+		return isatty(fd.rawValue) != 0
+		#endif
+	}
+	
+	#if canImport(Darwin)
 	private static var lock = os_unfair_lock_s()
+	#else
+	/* There is probably a more efficient lock that exists… */
+	private static var lock = NSLock()
+	#endif
 	
 }
