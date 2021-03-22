@@ -81,6 +81,7 @@ public struct CLTLogger : LogHandler {
 	}()
 	
 	public enum PrefixStyle {
+		case none
 		case text
 		case emoji
 		case color
@@ -102,6 +103,7 @@ public struct CLTLogger : LogHandler {
 		
 		let logPrefixesByLevel: [Logger.Level: String]
 		switch logPrefixStyle {
+			case .none:  logPrefixesByLevel = [:]
 			case .text:  logPrefixesByLevel = CLTLogger.defaultTextPrefixesByLogLevel
 			case .emoji: logPrefixesByLevel = CLTLogger.defaultEmojiPrefixesByLogLevel
 			case .color: logPrefixesByLevel = CLTLogger.defaultColorPrefixesByLogLevel
