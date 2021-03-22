@@ -29,7 +29,7 @@ public struct CLTLogger : LogHandler {
 	public init(messageTerminator: String = "") {
 		/* Sadly, standardOutput and standardError are not available in 0.0.1 */
 		self.init(fdChanges: [
-			.trace:    FileDescriptor.init(rawValue: 1), //.standardOutputs,
+			.trace:    FileDescriptor.init(rawValue: 1), //.standardOutput,
 			/* Below warning, logs to stdout */
 			.warning:  FileDescriptor.init(rawValue: 2)  //.standardError,
 			/* Above and including warning, logs to stderr */
