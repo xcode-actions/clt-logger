@@ -80,7 +80,7 @@ public struct CLTLogger : LogHandler {
 		]
 	}()
 	
-	public enum PrefixStyle {
+	public enum LogPrefixStyle {
 		case none
 		case text
 		case emoji
@@ -98,7 +98,7 @@ public struct CLTLogger : LogHandler {
 	public var logSuffix: String
 	
 	/* Sadly, FileDescriptor.standardError is not available in 0.0.1 */
-	public init(fd: FileDescriptor = .init(rawValue: 2), logPrefixStyle: PrefixStyle = .auto, logSuffix: String = "\n") {
+	public init(fd: FileDescriptor = .init(rawValue: 2), logPrefixStyle: LogPrefixStyle = .auto, logSuffix: String = "\n") {
 		let logPrefixStyle = (logPrefixStyle != .auto ? logPrefixStyle : (CLTLogger.shouldEnableColors(for: fd) ? .color : .emoji))
 		
 		let logPrefixesByLevel: [Logger.Level: String]
