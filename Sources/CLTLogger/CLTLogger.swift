@@ -176,8 +176,8 @@ public struct CLTLogger : LogHandler {
 	private var prettyMetadataCache = ""
 	
 	/* Straight out of the StreamLogHandler source from Apple. */
-	private func prettyMetadata(_ metadata: Logger.Metadata, showEmpty: Bool = false) -> String {
-		guard !metadata.isEmpty else {return showEmpty ? "[:]" : ""}
+	private func prettyMetadata(_ metadata: Logger.Metadata, level0: Bool = true) -> String {
+		guard !metadata.isEmpty else {return level0 ? "" : "[:]"}
 		/* Basically we’ll return "\(metadata) ", but keys will be sorted.
 		 * Most of the implem was stolen from Swift source code:
 		 *    https://github.com/apple/swift/blob/swift-5.3.3-RELEASE/stdlib/public/core/Dictionary.swift#L1681*/
@@ -186,18 +186,20 @@ public struct CLTLogger : LogHandler {
 		for (k, v) in metadata.lazy.sorted(by: { $0.key < $1.key }) {
 			if first {first = false}
 			else     {result += ", "}
-			debugPrint(k, terminator: "", to: &result)
+			if level0 {result += k}
+			else      {debugPrint(k, terminator: "", to: &result)}
 			result += ": "
 			debugPrint(prettyMetadataValue(v), terminator: "", to: &result)
 		}
-		result += "] "
+		result += "]"
+		if level0 {result += " "}
 		return result
 	}
 	
 	private func prettyMetadataValue(_ v: Logger.MetadataValue) -> String {
 		/* We return basically v.description, but dictionary keys are sorted. */
 		switch v {
-			case .dictionary(let dict):     return prettyMetadata(dict.mapValues{ Logger.MetadataValue.string(prettyMetadataValue($0)) }, showEmpty: true)
+			case .dictionary(let dict):     return prettyMetadata(dict.mapValues{ Logger.MetadataValue.string(prettyMetadataValue($0)) }, level0: false)
 			case .array(let list):          return list.map{ prettyMetadataValue($0) }.description
 			case .string(let str):          return str
 			case .stringConvertible(let o): return o.description
