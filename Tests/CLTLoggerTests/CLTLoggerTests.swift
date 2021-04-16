@@ -7,9 +7,12 @@ import Logging
 
 final class CLTLoggerTests: XCTestCase {
 	
+	override class func setUp() {
+		LoggingSystem.bootstrap{ _ in CLTLogger() }
+	}
+	
 	/* From https://apple.github.io/swift-log/docs/current/Logging/Protocols/LogHandler.html#treat-log-level-amp-metadata-as-values */
 	func testFromDoc() {
-		LoggingSystem.bootstrap{ _ in CLTLogger() }
 		var logger1 = Logger(label: "first logger")
 		logger1.logLevel = .debug
 		logger1[metadataKey: "only-on"] = "first"
@@ -22,15 +25,26 @@ final class CLTLoggerTests: XCTestCase {
 		XCTAssertEqual(.error, logger2.logLevel)
 		XCTAssertEqual("first",  logger1[metadataKey: "only-on"])
 		XCTAssertEqual("second", logger2[metadataKey: "only-on"])
+	}
+	
+	func testVisual() {
+		XCTAssertTrue(true, "We only want to see how the log look, so please see the logs.")
 		
-//		logger1.logLevel = .trace
-//		logger1.trace("trace: Hello, everything is broken! You have to fix it.")
-//		logger1.debug("debug: Hello, everything is broken! You have to fix it.")
-//		logger1.info("info: Hello, everything is broken! You have to fix it.")
-//		logger1.notice("notice: Hello, everything is broken! You have to fix it.")
-//		logger1.warning("warning: Hello, everything is broken! You have to fix it.")
-//		logger1.error("error: Hello, everything is broken! You have to fix it.")
-//		logger1.critical("critical: Hello, everything is broken! You have to fix it.")
+		var logger = Logger(label: "my logger")
+		logger.logLevel = .trace
+		logger.trace(   "trace:    Hello, everything is broken! You have to fix it.")
+		logger.debug(   "debug:    Hello, everything is broken! You have to fix it.")
+		logger.info(    "info:     Hello, everything is broken! You have to fix it.")
+		logger.notice(  "notice:   Hello, everything is broken! You have to fix it.")
+		logger.warning( "warning:  Hello, everything is broken! You have to fix it.")
+		logger.error(   "error:    Hello, everything is broken! You have to fix it.")
+		logger.critical("critical: Hello, everything is broken! You have to fix it.")
+		
+		logger[metadataKey: "from"] = "h\\]m"
+		logger.warning("with some metadata")
+		logger.warning("with some metadata", metadata: ["whats_wrong": "Shit's on \"fire\", yo!"])
+		logger.warning("with some metadata", metadata: ["whats_wrong": ["the shit": "it is on \"fire\", yo!"]])
+		logger.warning("with some metadata", metadata: ["whats_wrong": ["the shit", "it is on", "\"fire\"", "yo!"]])
 	}
 	
 }

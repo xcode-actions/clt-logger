@@ -91,7 +91,9 @@ public struct CLTLogger : LogHandler {
 	}
 	
 	public var logLevel: Logger.Level = .info
-	public var metadata: Logger.Metadata = [:]
+	public var metadata: Logger.Metadata = [:] {
+		didSet {prettyMetadataCache = prettyMetadata(metadata)}
+	}
 	
 	public let outputFileDescriptor: FileDescriptor
 	public let logPrefixesByLevel: [Logger.Level: String]
@@ -125,10 +127,14 @@ public struct CLTLogger : LogHandler {
 		set {metadata[metadataKey] = newValue}
 	}
 	
-	public func log(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata?, source: String, file: String, function: String, line: UInt) {
+	public func log(level: Logger.Level, message: Logger.Message, metadata logMetadata: Logger.Metadata?, source: String, file: String, function: String, line: UInt) {
 		let prefix = logPrefixesByLevel[level] ?? ""
 		
-		let data = Data((prefix + message.description + logSuffix).utf8)
+		let stringMetadata: String
+		if let m = logMetadata, !m.isEmpty {stringMetadata = prettyMetadata(metadata.merging(m, uniquingKeysWith: { _, new in new }))}
+		else                               {stringMetadata = prettyMetadataCache}
+		
+		let data = Data((prefix + stringMetadata + message.description + logSuffix).utf8)
 		
 		/* We lock, because the writeAll function might split the write in more
 		 * than 1 write (if the write system call only writes a part of the data).
@@ -166,5 +172,42 @@ public struct CLTLogger : LogHandler {
 	/* There is probably a more efficient lock that exists… */
 	private static var lock = NSLock()
 	#endif
+	
+	private var prettyMetadataCache = ""
+	
+	/* Straight out of the StreamLogHandler source from Apple. */
+	private func prettyMetadata(_ metadata: Logger.Metadata, showEmpty: Bool = false) -> String {
+		guard !metadata.isEmpty else {return showEmpty ? "[:]" : ""}
+		/* Basically we’ll return "\(metadata) ", but keys will be sorted.
+		 * Most of the implem was stolen from Swift source code:
+		 *    https://github.com/apple/swift/blob/swift-5.3.3-RELEASE/stdlib/public/core/Dictionary.swift#L1681*/
+		var result = "["
+		var first = true
+		for (k, v) in metadata.lazy.sorted(by: { $0.key < $1.key }) {
+			if first {first = false}
+			else     {result += ", "}
+			debugPrint(k, terminator: "", to: &result)
+			result += ": "
+			debugPrint(prettyMetadataValue(v), terminator: "", to: &result)
+		}
+		result += "] "
+		return result
+	}
+	
+	private func prettyMetadataValue(_ v: Logger.MetadataValue) -> String {
+		/* We return basically v.description, but dictionary keys are sorted. */
+		switch v {
+			case .dictionary(let dict):     return prettyMetadata(dict.mapValues{ Logger.MetadataValue.string(prettyMetadataValue($0)) }, showEmpty: true)
+			case .array(let list):          return list.map{ prettyMetadataValue($0) }.description
+			case .string(let str):          return str
+			case .stringConvertible(let o): return o.description
+		}
+	}
+	
+	private func escape(_ str: String) -> String {
+		return str
+			.replacingOccurrences(of: "\\", with: "\\\\", options: .literal)
+			.replacingOccurrences(of: "\"", with: "\\\"", options: .literal)
+	}
 	
 }
