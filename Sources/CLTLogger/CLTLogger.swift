@@ -69,14 +69,18 @@ public struct CLTLogger : LogHandler {
 	}()
 	
 	public static var defaultColorPrefixesByLogLevel: [Logger.Level: String] = {
+		func str(_ mods: [SelectGraphicRendition.Modifier]) -> String {
+			SelectGraphicRendition(modifiers: [.reset] + mods).rawValue
+		}
+		
 		return [
-			.trace:    "\u{1B}[0;37m", /* White */
-			.debug:    "\u{1B}[0;33m", /* Yellow */
-			.info:     "\u{1B}[0;32m", /* Green */
-			.notice:   "\u{1B}[0;34m", /* Blue */
-			.warning:  "\u{1B}[0;31m", /* Red */
-			.error:    "\u{1B}[1;31m", /* Bold red */
-			.critical: "\u{1B}[41m\u{1B}[1;37m" /* Bold white on red bg */
+			.trace:    str([.fgColorTo4BitWhite]),
+			.debug:    str([.fgColorTo4BitGreen]),
+			.info:     str([.fgColorTo4BitYellow]),
+			.notice:   str([.fgColorTo4BitBlue]),
+			.warning:  str([.fgColorTo4BitRed]),
+			.error:    str([.fgColorTo4BitRed, .bold]),
+			.critical: str([.fgColorTo4BitWhite, .bgColorTo4BitRed, .bold])
 		]
 	}()
 	

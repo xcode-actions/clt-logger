@@ -27,7 +27,7 @@ final class CLTLoggerTests: XCTestCase {
 		XCTAssertEqual("second", logger2[metadataKey: "only-on"])
 	}
 	
-	func testVisual() {
+	func testVisual1() {
 		XCTAssertTrue(true, "We only want to see how the log look, so please see the logs.")
 		
 		var logger = Logger(label: "my logger")
@@ -39,6 +39,13 @@ final class CLTLoggerTests: XCTestCase {
 		logger.warning( "warning:  Hello, everything is broken! You have to fix it.")
 		logger.error(   "error:    Hello, everything is broken! You have to fix it.")
 		logger.critical("critical: Hello, everything is broken! You have to fix it.")
+	}
+	
+	func testVisual2() {
+		XCTAssertTrue(true, "We only want to see how the log look, so please see the logs.")
+		
+		var logger = Logger(label: "my logger")
+		logger.logLevel = .trace
 		
 		logger[metadataKey: "from"] = "h\\]m"
 		logger.warning("with some metadata")
