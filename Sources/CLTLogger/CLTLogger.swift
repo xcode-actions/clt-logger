@@ -68,19 +68,20 @@ public struct CLTLogger : LogHandler {
 		]
 	}()
 	
-	public static var defaultColorPrefixesByLogLevel: [Logger.Level: String] = {
-		func str(_ mods: [SelectGraphicRendition.Modifier]) -> String {
-			SelectGraphicRendition(modifiers: [.reset] + mods).rawValue
+	/* Terminal does not support RGB colors, so we use 255-color palette. */
+	public static var defaultColorPrefixesLightBgByLogLevel: [Logger.Level: String] = {
+		func str(_ spaces: String, _ str: String, _ mods: [SGR.Modifier]) -> String {
+			return SGR.reset.rawValue + "[" + spaces + SGR(mods).rawValue + str + SGR.reset.rawValue + "] "
 		}
 		
 		return [
-			.trace:    str([.fgColorTo4BitWhite]),
-			.debug:    str([.fgColorTo4BitGreen]),
-			.info:     str([.fgColorTo4BitYellow]),
-			.notice:   str([.fgColorTo4BitBlue]),
-			.warning:  str([.fgColorTo4BitRed]),
-			.error:    str([.fgColorTo4BitRed, .bold]),
-			.critical: str([.fgColorTo4BitWhite, .bgColorTo4BitRed, .bold])
+			.trace:    str("", "TRC", [.fgColorTo256PaletteValue(247)]),
+			.debug:    str("", "DBG", [.fgColorTo4BitYellow]),
+			.info:     str("", "NFO", [.fgColorTo4BitGreen]),
+			.notice:   str("", "NTC", [.fgColorTo4BitBlue]),
+			.warning:  str("", "WRN", [.fgColorTo4BitRed]),
+			.error:    str("", "ERR", [.fgColorTo4BitRed, .bold]),
+			.critical: str("", "CRT", [.fgColorTo4BitWhite, .bgColorTo4BitRed])
 		]
 	}()
 	
@@ -112,7 +113,7 @@ public struct CLTLogger : LogHandler {
 			case .none:  logPrefixesByLevel = [:]
 			case .text:  logPrefixesByLevel = CLTLogger.defaultTextPrefixesByLogLevel
 			case .emoji: logPrefixesByLevel = CLTLogger.defaultEmojiPrefixesByLogLevel
-			case .color: logPrefixesByLevel = CLTLogger.defaultColorPrefixesByLogLevel
+			case .color: logPrefixesByLevel = CLTLogger.defaultColorPrefixesLightBgByLogLevel
 			case .auto: fatalError()
 		}
 		let logSuffix = (logPrefixStyle == .color ? "\u{1B}[0m" : "") + logSuffix

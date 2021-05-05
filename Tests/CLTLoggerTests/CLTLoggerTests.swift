@@ -32,13 +32,13 @@ final class CLTLoggerTests: XCTestCase {
 		
 		var logger = Logger(label: "my logger")
 		logger.logLevel = .trace
-		logger.trace(   "trace:    Hello, everything is broken! You have to fix it.")
-		logger.debug(   "debug:    Hello, everything is broken! You have to fix it.")
-		logger.info(    "info:     Hello, everything is broken! You have to fix it.")
-		logger.notice(  "notice:   Hello, everything is broken! You have to fix it.")
-		logger.warning( "warning:  Hello, everything is broken! You have to fix it.")
-		logger.error(   "error:    Hello, everything is broken! You have to fix it.")
-		logger.critical("critical: Hello, everything is broken! You have to fix it.")
+		logger.trace(   "trace:    Example of text at this level. Isn’t it amazing?")
+		logger.debug(   "debug:    Example of text at this level. Isn’t it amazing?")
+		logger.info(    "info:     Example of text at this level. Isn’t it amazing?")
+		logger.notice(  "notice:   Example of text at this level. Isn’t it amazing?")
+		logger.warning( "warning:  Example of text at this level. Isn’t it amazing?")
+		logger.error(   "error:    Example of text at this level. Isn’t it amazing?")
+		logger.critical("critical: Example of text at this level. Isn’t it amazing?")
 	}
 	
 	func testVisual2() {

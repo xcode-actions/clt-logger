@@ -13,7 +13,7 @@ A few links:
 - [The 8-bits colors table (direct image link)](https://i.stack.imgur.com/KTSQa.png)
 - [List of Terminals supporting True Colors](https://gist.github.com/XVilka/8346728)
 - [The ODA Specs](https://en.wikipedia.org/wiki/Open_Document_Architecture#External_links) aka. CCITT T.411-T.424 (equivalent to ISO 8613, but freely downloadable) */
-struct SelectGraphicRendition : RawRepresentable, Hashable, CustomStringConvertible {
+struct SGR : RawRepresentable, Hashable, CustomStringConvertible {
 	
 	enum Modifier : RawRepresentable, Hashable, CustomStringConvertible {
 		
@@ -436,13 +436,21 @@ struct SelectGraphicRendition : RawRepresentable, Hashable, CustomStringConverti
 		
 	}
 	
+	static var reset: SGR {
+		return SGR(.reset)
+	}
+	
 	var modifiers: [Modifier]
 	
 	var rawValue: String {
 		return "\u{1B}[\(modifiers.map{ $0.rawValue }.joined(separator: ";"))m"
 	}
 	
-	init(modifiers: [Modifier]) {
+	init(_ modifiers: Modifier...) {
+		self.modifiers = modifiers
+	}
+	
+	init(_ modifiers: [Modifier]) {
 		self.modifiers = modifiers
 	}
 	
