@@ -32,20 +32,6 @@ final class CLTLoggerTests: XCTestCase {
 		
 		var logger = Logger(label: "my logger")
 		logger.logLevel = .trace
-		logger.trace(   "trace:    Example of text at this level. Isn’t it amazing?")
-		logger.debug(   "debug:    Example of text at this level. Isn’t it amazing?")
-		logger.info(    "info:     Example of text at this level. Isn’t it amazing?")
-		logger.notice(  "notice:   Example of text at this level. Isn’t it amazing?")
-		logger.warning( "warning:  Example of text at this level. Isn’t it amazing?")
-		logger.error(   "error:    Example of text at this level. Isn’t it amazing?")
-		logger.critical("critical: Example of text at this level. Isn’t it amazing?")
-	}
-	
-	func testVisual2() {
-		XCTAssertTrue(true, "We only want to see how the log look, so please see the logs.")
-		
-		var logger = Logger(label: "my logger")
-		logger.logLevel = .trace
 		
 		logger[metadataKey: "from"] = "h\\]m"
 		logger.warning("with some metadata")
@@ -58,6 +44,20 @@ final class CLTLoggerTests: XCTestCase {
 		logger.warning("with some metadata")
 		logger.warning("with some metadata", metadata: ["service_id": "ldap"])
 		logger.warning("with some metadata", metadata: ["service_id": "ldap", "faulty_wires": ["d", "a", "oops, has\"a quote"]])
+	}
+	
+	func testVisual2() {
+		XCTAssertTrue(true, "We only want to see how the log look, so please see the logs.")
+		
+		var logger = Logger(label: "my logger")
+		logger.logLevel = .trace
+		logger.trace(   "trace:    Example of text at this level. Isn’t it amazing?")
+		logger.debug(   "debug:    Example of text at this level. Isn’t it amazing?")
+		logger.info(    "info:     Example of text at this level. Isn’t it amazing?")
+		logger.notice(  "notice:   Example of text at this level. Isn’t it amazing?")
+		logger.warning( "warning:  Example of text at this level. Isn’t it amazing?")
+		logger.error(   "error:    Example of text at this level. Isn’t it amazing?")
+		logger.critical("critical: Example of text at this level. Isn’t it amazing?")
 	}
 	
 }
