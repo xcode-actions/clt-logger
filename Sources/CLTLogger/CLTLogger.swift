@@ -102,10 +102,10 @@ public struct CLTLogger : LogHandler {
 	
 	public let outputFileDescriptor: FileDescriptor
 	public let logPrefixesByLevel: [Logger.Level: String]
-	public var logSuffix: String
+	public var lineSeparator: String
 	
 	/* Sadly, FileDescriptor.standardError is not available in 0.0.1 */
-	public init(fd: FileDescriptor = .init(rawValue: 2), logPrefixStyle: LogPrefixStyle = .auto, logSuffix: String = "\n") {
+	public init(fd: FileDescriptor = .init(rawValue: 2), logPrefixStyle: LogPrefixStyle = .auto, lineSeparator: String = "\n") {
 		let logPrefixStyle = (logPrefixStyle != .auto ? logPrefixStyle : (CLTLogger.shouldEnableColors(for: fd) ? .color : .emoji))
 		
 		let logPrefixesByLevel: [Logger.Level: String]
@@ -116,15 +116,15 @@ public struct CLTLogger : LogHandler {
 			case .color: logPrefixesByLevel = CLTLogger.defaultColorPrefixesByLogLevel
 			case .auto: fatalError()
 		}
-		let logSuffix = (logPrefixStyle == .color ? SGR.reset.rawValue : "") + logSuffix
+		let lineSeparator = (logPrefixStyle == .color ? SGR.reset.rawValue : "") + lineSeparator
 		
-		self.init(fd: fd, logPrefixesByLevel: logPrefixesByLevel, logSuffix: logSuffix)
+		self.init(fd: fd, logPrefixesByLevel: logPrefixesByLevel, lineSeparator: lineSeparator)
 	}
 	
-	public init(fd: FileDescriptor = .init(rawValue: 2), logPrefixesByLevel: [Logger.Level: String], logSuffix: String = "\n") {
+	public init(fd: FileDescriptor = .init(rawValue: 2), logPrefixesByLevel: [Logger.Level: String], lineSeparator: String = "\n") {
 		self.outputFileDescriptor = fd
 		self.logPrefixesByLevel = logPrefixesByLevel
-		self.logSuffix = logSuffix
+		self.lineSeparator = lineSeparator
 	}
 	
 	public subscript(metadataKey metadataKey: String) -> Logger.Metadata.Value? {
@@ -139,7 +139,7 @@ public struct CLTLogger : LogHandler {
 		if let m = logMetadata, !m.isEmpty {stringMetadata = prettyMetadata(metadata.merging(m, uniquingKeysWith: { _, new in new }))}
 		else                               {stringMetadata = prettyMetadataCache}
 		
-		let data = Data((prefix + stringMetadata + message.description + logSuffix).utf8)
+		let data = Data((prefix + stringMetadata + message.description + lineSeparator).utf8)
 		
 		/* We lock, because the writeAll function might split the write in more
 		 * than 1 write (if the write system call only writes a part of the data).
@@ -186,17 +186,17 @@ public struct CLTLogger : LogHandler {
 		/* Basically we’ll return "\(metadata) ", but keys will be sorted.
 		 * Most of the implem was stolen from Swift source code:
 		 *    https://github.com/apple/swift/blob/swift-5.3.3-RELEASE/stdlib/public/core/Dictionary.swift#L1681*/
-		var result = "["
+		var result = (level0 ? "" : "[")
 		var first = true
 		for (k, v) in metadata.lazy.sorted(by: { $0.key < $1.key }) {
 			if first {first = false}
-			else     {result += ", "}
+			else     {result += (level0 ? " --- " : ", ")}
 			if level0 {result += k}
 			else      {debugPrint(k, terminator: "", to: &result)}
-			result += ": "
+			result += (level0 ? "=" : ": ")
 			debugPrint(prettyMetadataValue(v), terminator: "", to: &result)
 		}
-		result += "]"
+		result += (level0 ? "" : "]")
 		if level0 {result += " "}
 		return result
 	}
