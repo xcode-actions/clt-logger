@@ -599,7 +599,6 @@ public struct SGR : RawRepresentable, Hashable, CustomStringConvertible {
 							let g = try uint8(scanner.scanUpToString(String(Self.separatorChar)) ?? "0")
 							guard scanner.scanCharacter() == Self.separatorChar else {throw DummyError()}
 							let b = try uint8(scanner.scanUpToString(String(Self.separatorChar)) ?? "0")
-							guard scanner.isAtEnd else {throw DummyError()}
 							switch colorDestination {
 								case .fg: self = .fgColorToRGB(red: r, green: g, blue: b); return
 								case .bg: self = .bgColorToRGB(red: r, green: g, blue: b); return
@@ -608,7 +607,6 @@ public struct SGR : RawRepresentable, Hashable, CustomStringConvertible {
 							
 						case "5":
 							let v = try uint8(scanner.scanUpToString(String(Self.separatorChar)) ?? "0")
-							guard scanner.isAtEnd else {throw DummyError()}
 							switch colorDestination {
 								case .fg: self = .fgColorTo256PaletteValue(v); return
 								case .bg: self = .bgColorTo256PaletteValue(v); return

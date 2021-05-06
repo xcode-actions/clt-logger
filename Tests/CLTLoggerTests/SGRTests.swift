@@ -3,10 +3,30 @@ import XCTest
 
 
 
+/* TODO: A lot more tests! */
 final class SGRTests: XCTestCase {
 	
+	func testSGRParseFail() {
+		XCTAssertNil(SGR(rawValue: "\(escape)[38;2;255;255m"))
+		XCTAssertNil(SGR(rawValue: "\(escape)[38;2;255;255;+1m"))
+	}
+	
 	func testSGRParse() {
+		XCTAssertEqual(SGR(rawValue: "\(escape)[m"), SGR(.reset))
+		XCTAssertEqual(SGR(rawValue: "\(escape)[0m"), SGR(.reset))
+		XCTAssertEqual(SGR(rawValue: "\(escape)[38;5;7m"), SGR(.fgColorTo256PaletteValue(7)))
+		XCTAssertEqual(SGR(rawValue: "\(escape)[38;2;255;255;0m"), SGR(.fgColorToRGB(red: 0xFF, green: 0xFF, blue: 0x00)))
 		XCTAssertEqual(SGR(rawValue: "\(escape)[38:4::255:255:0:0::m"), SGR(.fgColorToCMYKUsingODAFormat(cyan: 0xFF, magenta: 0xFF, yellow: 0x00, black: 0x00, colorSpaceInfo: nil)))
+		/* This one I’m not so sure, but Wikipedia says empty values should be
+		 * read as 0, so here we go. */
+		XCTAssertEqual(SGR(rawValue: "\(escape)[38;2;255;255;m"), SGR(.fgColorToRGB(red: 0xFF, green: 0xFF, blue: 0x00)))
+	}
+	
+	func testMultipleSGRParse() {
+		XCTAssertEqual(SGR(rawValue: "\(escape)[38;5;7;m"), SGR(.fgColorTo256PaletteValue(7), .reset))
+		XCTAssertEqual(SGR(rawValue: "\(escape)[38;2;255;255;0;m"), SGR(.fgColorToRGB(red: 0xFF, green: 0xFF, blue: 0x00), .reset))
+		XCTAssertEqual(SGR(rawValue: "\(escape)[38:4::255:255:0:0::;;1m"), SGR(.fgColorToCMYKUsingODAFormat(cyan: 0xFF, magenta: 0xFF, yellow: 0x00, black: 0x00, colorSpaceInfo: nil), .reset, .bold))
+		XCTAssertEqual(SGR(rawValue: "\(escape)[38:4::255:255:0:0::;;1m"), SGR(.fgColorToCMYKUsingODAFormat(cyan: 0xFF, magenta: 0xFF, yellow: 0x00, black: 0x00, colorSpaceInfo: nil), .reset, .bold))
 	}
 	
 	func testVisual1() {
