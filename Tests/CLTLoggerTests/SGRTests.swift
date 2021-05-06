@@ -17,6 +17,8 @@ final class SGRTests: XCTestCase {
 		XCTAssertEqual(SGR(rawValue: "\(escape)[38;5;7m"), SGR(.fgColorTo256PaletteValue(7)))
 		XCTAssertEqual(SGR(rawValue: "\(escape)[38;2;255;255;0m"), SGR(.fgColorToRGB(red: 0xFF, green: 0xFF, blue: 0x00)))
 		XCTAssertEqual(SGR(rawValue: "\(escape)[38:4::255:255:0:0::m"), SGR(.fgColorToCMYKUsingODAFormat(cyan: 0xFF, magenta: 0xFF, yellow: 0x00, black: 0x00, colorSpaceInfo: nil)))
+		XCTAssertEqual(SGR(rawValue: "\(escape)[38:4:2:255:255:0:0::1m"), SGR(.fgColorToCMYKUsingODAFormat(cyan: 0xFF, magenta: 0xFF, yellow: 0x00, black: 0x00, colorSpaceInfo: .init(colorSpaceId: 2, colorSpaceTolerance: nil, colorSpaceAssociatedWithTolerance: .cielab))))
+		XCTAssertEqual(SGR(rawValue: "\(escape)[38:4:2:255:255:0:0:7:1m"), SGR(.fgColorToCMYKUsingODAFormat(cyan: 0xFF, magenta: 0xFF, yellow: 0x00, black: 0x00, colorSpaceInfo: .init(colorSpaceId: 2, colorSpaceTolerance: 7, colorSpaceAssociatedWithTolerance: .cielab))))
 		/* This one I’m not so sure, but Wikipedia says empty values should be
 		 * read as 0, so here we go. */
 		XCTAssertEqual(SGR(rawValue: "\(escape)[38;2;255;255;m"), SGR(.fgColorToRGB(red: 0xFF, green: 0xFF, blue: 0x00)))

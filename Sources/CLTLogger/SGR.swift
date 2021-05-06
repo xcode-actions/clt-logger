@@ -316,6 +316,12 @@ public struct SGR : RawRepresentable, Hashable, CustomStringConvertible {
 				case cielab = 1
 			}
 			
+			public init(colorSpaceId: Int?, colorSpaceTolerance: Int?, colorSpaceAssociatedWithTolerance: ColorSpaceForTolerance?) {
+				self.colorSpaceId = colorSpaceId
+				self.colorSpaceTolerance = colorSpaceTolerance
+				self.colorSpaceAssociatedWithTolerance = colorSpaceAssociatedWithTolerance
+			}
+			
 			init?(param2: Int?, param7: Int?, param8: Int?) {
 				switch param8 {
 					case nil: colorSpaceAssociatedWithTolerance = nil
