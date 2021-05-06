@@ -75,13 +75,13 @@ public struct CLTLogger : LogHandler {
 		}
 		
 		return [
-			.trace:    str("", "TRC", [.fgColorTo256PaletteValue(247)],         []),
-			.debug:    str("", "DBG", [.fgColorTo4BitYellow],                   []),
-			.info:     str("", "NFO", [.fgColorTo4BitGreen],                    []),
-			.notice:   str("", "NTC", [.fgColorTo4BitBrightBlue],               []),
-			.warning:  str("", "WRN", [.fgColorTo4BitMagenta],                  []),
-			.error:    str("", "ERR", [.fgColorTo4BitRed, .bold],               [.bold]),
-			.critical: str("", "CRT", [.fgColorTo4BitWhite, .bgColorTo4BitRed], [.bold])
+			.trace:    str("", "TRC", [.fgColorTo256PaletteValue(247), .bold],               []),
+			.debug:    str("", "DBG", [.fgColorTo4BitYellow, .bold],                         []),
+			.info:     str("", "NFO", [.fgColorTo4BitGreen, .bold],                          []),
+			.notice:   str("", "NTC", [.fgColorTo256PaletteValue(32), .bold],                []),
+			.warning:  str("", "WRN", [.fgColorTo4BitMagenta, .bold],                        []),
+			.error:    str("", "ERR", [.fgColorTo4BitRed, .bold],                            [.bold]),
+			.critical: str("", "CRT", [.fgColorTo4BitBrightWhite, .bgColorTo4BitRed, .bold], [.bold])
 		]
 	}()
 	
