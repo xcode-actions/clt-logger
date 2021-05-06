@@ -78,7 +78,7 @@ public struct CLTLogger : LogHandler {
 			.trace:    str("", "TRC", [.fgColorTo256PaletteValue(247)],         []),
 			.debug:    str("", "DBG", [.fgColorTo4BitYellow],                   []),
 			.info:     str("", "NFO", [.fgColorTo4BitGreen],                    []),
-			.notice:   str("", "NTC", [.fgColorTo4BitCyan],                     []),
+			.notice:   str("", "NTC", [.fgColorTo4BitBrightBlue],               []),
 			.warning:  str("", "WRN", [.fgColorTo4BitMagenta],                  []),
 			.error:    str("", "ERR", [.fgColorTo4BitRed, .bold],               [.bold]),
 			.critical: str("", "CRT", [.fgColorTo4BitWhite, .bgColorTo4BitRed], [.bold])
