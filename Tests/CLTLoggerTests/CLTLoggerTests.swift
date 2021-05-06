@@ -34,10 +34,11 @@ final class CLTLoggerTests: XCTestCase {
 		logger.logLevel = .trace
 		
 		logger[metadataKey: "from"] = "h\\]m"
-		logger.warning("with some metadata")
-		logger.warning("with some metadata", metadata: ["whats_wrong": "Shit's on \"fire\", yo!"])
-		logger.warning("with some metadata", metadata: ["whats_wrong": ["the shit": "it is on \"fire\", yo!"]])
+		logger.trace("with some metadata")
+		logger.notice("with some metadata", metadata: ["whats_wrong": "Shit's on \"fire\", yo!"])
+		logger.error("with some metadata", metadata: ["whats_wrong": ["the shit": "it is on \"fire\", yo!", "bob?": "kelso"]])
 		logger.warning("with some metadata", metadata: ["whats_wrong": ["the shit", "it is on", "\"fire\"", "yo!"]])
+		logger.critical("with some metadata", metadata: ["whats_wrong": ["the shit", "it is on", "\"fire\"", "yo!"], "aaaaand": "we’re all dead"])
 		
 		logger[metadataKey: "from"] = nil
 		logger[metadataKey: "request_id"] = "42"

@@ -44,34 +44,43 @@ fact that we cannot use the project as-is, or that the genericity the Adorkable
 logger introduces is not really needed (creating a log handler is not complex). */
 public struct CLTLogger : LogHandler {
 	
-	public static var defaultTextPrefixesByLogLevel: [Logger.Level: String] = {
+	public static var defaultTextPrefixesByLogLevel: [Logger.Level: (text: String, metadata: String)] = {
+		func addMeta(_ str: String) -> (text: String, metadata: String) {
+			return (str + ": ", "  ")
+		}
 		return [
-			.trace:    "TRACE: ",
-			.debug:    "DEBUG: ",
-			.info:     "INFO: ",
-			.notice:   "* NOTICE: ",
-			.warning:  "*** WARNING: ",
-			.error:    "***** ERROR: ",
-			.critical: "******* CRITICAL: "
+			.trace:    addMeta("TRACE"),
+			.debug:    addMeta("DEBUG"),
+			.info:     addMeta("INFO"),
+			.notice:   addMeta("* NOTICE"),
+			.warning:  addMeta("*** WARNING"),
+			.error:    addMeta("***** ERROR"),
+			.critical: addMeta("******* CRITICAL")
 		]
 	}()
 	
-	public static var defaultEmojiPrefixesByLogLevel: [Logger.Level: String] = {
+	public static var defaultEmojiPrefixesByLogLevel: [Logger.Level: (text: String, metadata: String)] = {
+		func addMeta(_ str: String) -> (text: String, metadata: String) {
+			return (str + " ", "     ")
+		}
 		return [
-			.trace:    "💩 ",
-			.debug:    "⚙️ ",
-			.info:     "📔 ",
-			.notice:   "🗣 ",
-			.warning:  "⚠️ ",
-			.error:    "❗️ ",
-			.critical: "‼️ "
+			.trace:    addMeta("💩"),
+			.debug:    addMeta("⚙️"),
+			.info:     addMeta("📔"),
+			.notice:   addMeta("🗣"),
+			.warning:  addMeta("⚠️"),
+			.error:    addMeta("❗️"),
+			.critical: addMeta("‼️")
 		]
 	}()
 	
 	/* Terminal does not support RGB colors, so we use 255-color palette. */
-	public static var defaultColorPrefixesByLogLevel: [Logger.Level: String] = {
-		func str(_ spaces: String, _ str: String, _ mods1: [SGR.Modifier], _ mods2: [SGR.Modifier]) -> String {
-			return SGR.reset.rawValue + "[" + spaces + SGR(mods1).rawValue + str + SGR.reset.rawValue + "] " + SGR(mods2).rawValue
+	public static var defaultColorPrefixesByLogLevel: [Logger.Level: (text: String, metadata: String)] = {
+		func str(_ spaces: String, _ str: String, _ mods1: [SGR.Modifier], _ mods2: [SGR.Modifier]) -> (text: String, metadata: String) {
+			return (
+				SGR.reset.rawValue + "[" + spaces + SGR(mods1).rawValue + str + SGR.reset.rawValue + "] " + SGR(mods2).rawValue,
+				"" + SGR(.fgColorTo4BitWhite).rawValue + "meta:" + SGR.reset.rawValue + "   " + SGR(.fgColorTo256PaletteValue(245)).rawValue
+			)
 		}
 		
 		return [
@@ -97,18 +106,18 @@ public struct CLTLogger : LogHandler {
 	
 	public var logLevel: Logger.Level = .info
 	public var metadata: Logger.Metadata = [:] {
-		didSet {prettyMetadataCache = prettyMetadata(metadata)}
+		didSet {flatMetadataCache = flatMetadataArray(metadata)}
 	}
 	
 	public let outputFileDescriptor: FileDescriptor
-	public let logPrefixesByLevel: [Logger.Level: String]
-	public var lineSeparator: String
-	
+	public let logPrefixesByLevel: [Logger.Level: (text: String, metadata: String)]
+	public let lineSeparator: String
+
 	/* Sadly, FileDescriptor.standardError is not available in 0.0.1 */
 	public init(fd: FileDescriptor = .init(rawValue: 2), logPrefixStyle: LogPrefixStyle = .auto, lineSeparator: String = "\n") {
 		let logPrefixStyle = (logPrefixStyle != .auto ? logPrefixStyle : (CLTLogger.shouldEnableColors(for: fd) ? .color : .emoji))
 		
-		let logPrefixesByLevel: [Logger.Level: String]
+		let logPrefixesByLevel: [Logger.Level: (text: String, metadata: String)]
 		switch logPrefixStyle {
 			case .none:  logPrefixesByLevel = [:]
 			case .text:  logPrefixesByLevel = CLTLogger.defaultTextPrefixesByLogLevel
@@ -121,7 +130,7 @@ public struct CLTLogger : LogHandler {
 		self.init(fd: fd, logPrefixesByLevel: logPrefixesByLevel, lineSeparator: lineSeparator)
 	}
 	
-	public init(fd: FileDescriptor = .init(rawValue: 2), logPrefixesByLevel: [Logger.Level: String], lineSeparator: String = "\n") {
+	public init(fd: FileDescriptor = .init(rawValue: 2), logPrefixesByLevel: [Logger.Level: (text: String, metadata: String)], lineSeparator: String = "\n") {
 		self.outputFileDescriptor = fd
 		self.logPrefixesByLevel = logPrefixesByLevel
 		self.lineSeparator = lineSeparator
@@ -133,13 +142,17 @@ public struct CLTLogger : LogHandler {
 	}
 	
 	public func log(level: Logger.Level, message: Logger.Message, metadata logMetadata: Logger.Metadata?, source: String, file: String, function: String, line: UInt) {
-		let prefix = logPrefixesByLevel[level] ?? ""
+		let (textPrefix, metadataPrefix) = logPrefixesByLevel[level] ?? ("", "")
 		
-		let stringMetadata: String
-		if let m = logMetadata, !m.isEmpty {stringMetadata = prettyMetadata(metadata.merging(m, uniquingKeysWith: { _, new in new }))}
-		else                               {stringMetadata = prettyMetadataCache}
+		let fma: [String]
+		if let m = logMetadata, !m.isEmpty {fma = flatMetadataArray(metadata.merging(m, uniquingKeysWith: { _, new in new }))}
+		else                               {fma = flatMetadataCache}
 		
-		let data = Data((prefix + stringMetadata + message.description + lineSeparator).utf8)
+		var fullString = (textPrefix + message.description + lineSeparator)
+		for flatMeta in fma {
+			fullString.append(metadataPrefix + flatMeta + lineSeparator)
+		}
+		let data = Data(fullString.utf8)
 		
 		/* We lock, because the writeAll function might split the write in more
 		 * than 1 write (if the write system call only writes a part of the data).
@@ -178,33 +191,38 @@ public struct CLTLogger : LogHandler {
 	private static var lock = NSLock()
 	#endif
 	
-	private var prettyMetadataCache = ""
+	private var flatMetadataCache = [String]()
 	
-	/* Straight out of the StreamLogHandler source from Apple. */
-	private func prettyMetadata(_ metadata: Logger.Metadata, level0: Bool = true) -> String {
-		guard !metadata.isEmpty else {return level0 ? "" : "[:]"}
+	private func flatMetadataArray(_ metadata: Logger.Metadata) -> [String] {
+		return metadata.lazy.sorted{ $0.key < $1.key }.map{ keyVal in
+			let (key, val) = keyVal
+			return key + ": " + prettyMetadataValue(val)
+		}
+	}
+	
+	private func flatMetadata(_ metadata: Logger.Metadata) -> String {
+		guard !metadata.isEmpty else {return "[:]"}
+		
 		/* Basically we’ll return "\(metadata) ", but keys will be sorted.
 		 * Most of the implem was stolen from Swift source code:
 		 *    https://github.com/apple/swift/blob/swift-5.3.3-RELEASE/stdlib/public/core/Dictionary.swift#L1681*/
-		var result = (level0 ? "" : "[")
+		var result = "["
 		var first = true
 		for (k, v) in metadata.lazy.sorted(by: { $0.key < $1.key }) {
 			if first {first = false}
-			else     {result += (level0 ? " --- " : ", ")}
-			if level0 {result += k}
-			else      {debugPrint(k, terminator: "", to: &result)}
-			result += (level0 ? "=" : ": ")
+			else     {result += ", "}
+			debugPrint(k, terminator: "", to: &result)
+			result += ": "
 			debugPrint(prettyMetadataValue(v), terminator: "", to: &result)
 		}
-		result += (level0 ? "" : "]")
-		if level0 {result += " "}
+		result += "]"
 		return result
 	}
 	
 	private func prettyMetadataValue(_ v: Logger.MetadataValue) -> String {
 		/* We return basically v.description, but dictionary keys are sorted. */
 		switch v {
-			case .dictionary(let dict):     return prettyMetadata(dict.mapValues{ Logger.MetadataValue.string(prettyMetadataValue($0)) }, level0: false)
+			case .dictionary(let dict):     return flatMetadata(dict.mapValues{ Logger.MetadataValue.string(prettyMetadataValue($0)) })
 			case .array(let list):          return list.map{ prettyMetadataValue($0) }.description
 			case .string(let str):          return str
 			case .stringConvertible(let o): return o.description
