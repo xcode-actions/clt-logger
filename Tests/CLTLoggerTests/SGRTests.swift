@@ -5,6 +5,10 @@ import XCTest
 
 final class SGRTests: XCTestCase {
 	
+	func testSGRParse() {
+		XCTAssertEqual(SGR(rawValue: "\(escape)[38:4::255:255:0:0::m"), SGR(.fgColorToCMYKUsingODAFormat(cyan: 0xFF, magenta: 0xFF, yellow: 0x00, black: 0x00, colorSpaceInfo: nil)))
+	}
+	
 	func testVisual1() {
 		XCTAssertTrue(true, "We only want to see how the output look, so please see the logs.")
 		
@@ -25,9 +29,11 @@ final class SGRTests: XCTestCase {
 		visualPrint(SGR(.fgColorToCMYKUsingODAFormat(cyan: 0xFF, magenta: 0xFF, yellow: 0x00, black: 0x00, colorSpaceInfo: nil)).rawValue + "Hello" + SGR.reset.rawValue)
 	}
 	
+	private let escape = "\u{1B}"
+	
 	private func visualPrint(_ str: String) {
 		print(str + " <- ", terminator: "")
-		print(str.replacingOccurrences(of: "\u{1B}", with: "ESC"))
+		print(str.replacingOccurrences(of: escape, with: "ESC"))
 	}
 	
 }

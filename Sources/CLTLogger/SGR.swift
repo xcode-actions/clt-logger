@@ -509,23 +509,22 @@ public struct SGR : RawRepresentable, Hashable, CustomStringConvertible {
 					
 					func uint8(_ i: Int?) throws -> UInt8? {
 						guard let i = i else {return nil}
-						guard i >= 0, i <= Int8.max else {
+						guard i >= 0, i <= UInt8.max else {
 							throw DummyError()
 						}
 						return UInt8(i)
 					}
 					
-					let param1 = try scanParam()
+					let param2 = try scanParam()
 					if colorFormat == "5" {
 						guard subScanner.isAtEnd else {
 							throw DummyError()
 						}
-						let v = try uint8(param1)
+						let v = try uint8(param2)
 						self = (isFgColor ? .fgColorTo256PaletteValueODAFormat(v) : .bgColorTo256PaletteValueODAFormat(v))
 						return
 					}
 					
-					let param2 = try scanParam()
 					let param3 = try scanParam()
 					let param4 = try scanParam()
 					let param5 = try scanParam()
@@ -584,7 +583,7 @@ public struct SGR : RawRepresentable, Hashable, CustomStringConvertible {
 						guard
 							s.rangeOfCharacter(from: Self.numCharset.inverted) == nil, /* Prevents “+2” from being parsed */
 							let i = Int(s, radix: 10),
-							i >= 0, i <= Int8.max
+							i >= 0, i <= UInt8.max
 						else {
 							throw DummyError()
 						}
@@ -773,12 +772,12 @@ public struct SGR : RawRepresentable, Hashable, CustomStringConvertible {
 			
 			let contentScanner = Scanner(forParsing: csiContent)
 			while let modifier = Modifier(scanner: contentScanner) {
+				modifiers.append(modifier)
+				guard !contentScanner.isAtEnd else {break}
 				/* A modifier has been parsed. Either scan location is now at a
 				 * semicolon or at the end. If on semicolon we must consume it. */
 				let c = contentScanner.scanCharacter()
-				assert(c == Modifier.separatorChar || c == nil)
-				
-				modifiers.append(modifier)
+				assert(c == Modifier.separatorChar)
 			}
 			guard contentScanner.isAtEnd else {
 				/* Not all modifiers parsed in the content */
