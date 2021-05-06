@@ -710,8 +710,7 @@ public struct SGR : RawRepresentable, Hashable, CustomStringConvertible {
 		}
 		
 		public var description: String {
-			/* TODO maybe one day: switch on self and describe modifier? */
-			return "SGR Modifier <\(rawValue)>"
+			return "SGR.Modifier<\(rawValue)>"
 		}
 		
 		static let separatorChar = Character(";")
@@ -792,8 +791,7 @@ public struct SGR : RawRepresentable, Hashable, CustomStringConvertible {
 	}
 	
 	public var description: String {
-		/* TODO maybe one day: describe SGR? */
-		return "SGR <\(rawValue)>"
+		return "ESC\(rawValue.dropFirst())"
 	}
 	
 	private static let escapeChar = Character("\u{1B}")
