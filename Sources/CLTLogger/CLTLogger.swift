@@ -229,10 +229,4 @@ public struct CLTLogger : LogHandler {
 		}
 	}
 	
-	private func escape(_ str: String) -> String {
-		return str
-			.replacingOccurrences(of: "\\", with: "\\\\", options: .literal)
-			.replacingOccurrences(of: "\"", with: "\\\"", options: .literal)
-	}
-	
 }
