@@ -61,4 +61,14 @@ final class CLTLoggerTests: XCTestCase {
 		logger.critical("critical: Example of text at this level. Isn’t it amazing?")
 	}
 	
+	func testVisual3() {
+		XCTAssertTrue(true, "We only want to see how the log look, so please see the logs.")
+		
+		var logger = Logger(label: "my logger")
+		logger.logLevel = .trace
+		logger.warning("Single line log")
+		logger.trace("Mutli-line\nlog.\nHow does it feel?", metadata: ["with": "metadata"])
+		logger.error("Another multiline\nhere is the second line")
+	}
+	
 }
