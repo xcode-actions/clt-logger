@@ -44,9 +44,9 @@ fact that we cannot use the project as-is, or that the genericity the Adorkable
 logger introduces is not really needed (creating a log handler is not complex). */
 public struct CLTLogger : LogHandler {
 	
-	public static var defaultTextPrefixesByLogLevel: [Logger.Level: (text: String, metadata: String)] = {
-		func addMeta(_ str: String) -> (text: String, metadata: String) {
-			return (str + ": ", "  ")
+	public static var defaultTextPrefixesByLogLevel: [Logger.Level: (text: String, textContinuation: String, metadata: String)] = {
+		func addMeta(_ str: String) -> (text: String, textContinuation: String, metadata: String) {
+			return (str + ": ", String(repeating: "-", count: str.count) + ": ", "  meta: ")
 		}
 		return [
 			.trace:    addMeta("TRACE"),
@@ -59,29 +59,36 @@ public struct CLTLogger : LogHandler {
 		]
 	}()
 	
-	public static var defaultEmojiPrefixesByLogLevel: [Logger.Level: (text: String, metadata: String)] = {
-		func addMeta(_ str: String) -> (text: String, metadata: String) {
-			return (str + " ", "     ")
+	public static var defaultEmojiPrefixesByLogLevel: [Logger.Level: (text: String, textContinuation: String, metadata: String)] = {
+		func addMeta(_ str: String, _ padding: Int) -> (text: String, textContinuation: String, metadata: String) {
+			/* The padding correct alignment issues in the Terminal. However, the
+			 * emoji mode was designed for Xcode, and in Xcode there are no
+			 * alignment issues… */
+//			let padding = String(repeating: " ", count: padding)
+			let padding = ""
+			return (str + padding + " ", "-- ", "-- ⛓ " /* + " " In the Terminal, two spaces are needed after the link emoji instead of just one. */)
 		}
 		return [
-			.trace:    addMeta("💩"),
-			.debug:    addMeta("⚙️"),
-			.info:     addMeta("📔"),
-			.notice:   addMeta("🗣"),
-			.warning:  addMeta("⚠️"),
-			.error:    addMeta("❗️"),
-			.critical: addMeta("‼️")
+			.trace:    addMeta("💩", 0),
+			.debug:    addMeta("⚙️", 1),
+			.info:     addMeta("📔", 0),
+			.notice:   addMeta("🗣", 1),
+			.warning:  addMeta("⚠️", 1),
+			.error:    addMeta("❗️", 0),
+			.critical: addMeta("‼️", 1)
 		]
 	}()
 	
 	/* Terminal does not support RGB colors, so we use 255-color palette. */
-	public static var defaultColorPrefixesByLogLevel: [Logger.Level: (text: String, metadata: String)] = {
-		func str(_ spaces: String, _ str: String, _ mods1: [SGR.Modifier], _ mods2: [SGR.Modifier]) -> (text: String, metadata: String) {
+	public static var defaultColorPrefixesByLogLevel: [Logger.Level: (text: String, textContinuation: String, metadata: String)] = {
+		func str(_ spaces: String, _ str: String, _ mods1: [SGR.Modifier], _ mods2: [SGR.Modifier]) -> (text: String, textContinuation: String, metadata: String) {
 			let bgColor = SGR.Modifier.reset
 			let fgColor = SGR.Modifier.fgColorTo4BitBrightBlack
 			return (
 				SGR(.reset, bgColor, fgColor).rawValue + "[" + spaces + SGR(mods1).rawValue + str + SGR(.reset, bgColor, fgColor).rawValue + "]" + SGR.reset.rawValue + " " + SGR(mods2).rawValue,
-				"" + SGR(.fgColorTo4BitWhite).rawValue + "  meta:" + SGR.reset.rawValue + " " + SGR(.fgColorTo256PaletteValue(245)).rawValue
+				SGR(.reset, bgColor, fgColor).rawValue + "[" + spaces + SGR(mods1).rawValue + String(repeating: "+", count: str.count) + SGR(.reset, bgColor, fgColor).rawValue + "]" + SGR.reset.rawValue + " " + SGR(mods2).rawValue,
+//				SGR(.reset, .fgColorTo4BitWhite).rawValue + "[" + str + "]" + SGR.reset.rawValue + " " + SGR(mods2).rawValue,
+				"  " + SGR(.fgColorTo4BitWhite).rawValue + "meta:" + SGR.reset.rawValue + " " + SGR(.fgColorTo256PaletteValue(245)).rawValue
 			)
 		}
 		
@@ -113,14 +120,14 @@ public struct CLTLogger : LogHandler {
 	}
 	
 	public let outputFileDescriptor: FileDescriptor
-	public let logPrefixesByLevel: [Logger.Level: (text: String, metadata: String)]
+	public let logPrefixesByLevel: [Logger.Level: (text: String, textContinuation: String, metadata: String)]
 	public let lineSeparator: String
 
 	/* Sadly, FileDescriptor.standardError is not available in 0.0.1 */
 	public init(fd: FileDescriptor = .init(rawValue: 2), logPrefixStyle: LogPrefixStyle = .auto, lineSeparator: String = "\n") {
 		let logPrefixStyle = (logPrefixStyle != .auto ? logPrefixStyle : (CLTLogger.shouldEnableColors(for: fd) ? .color : .emoji))
 		
-		let logPrefixesByLevel: [Logger.Level: (text: String, metadata: String)]
+		let logPrefixesByLevel: [Logger.Level: (text: String, textContinuation: String, metadata: String)]
 		switch logPrefixStyle {
 			case .none:  logPrefixesByLevel = [:]
 			case .text:  logPrefixesByLevel = CLTLogger.defaultTextPrefixesByLogLevel
@@ -133,7 +140,7 @@ public struct CLTLogger : LogHandler {
 		self.init(fd: fd, logPrefixesByLevel: logPrefixesByLevel, lineSeparator: lineSeparator)
 	}
 	
-	public init(fd: FileDescriptor = .init(rawValue: 2), logPrefixesByLevel: [Logger.Level: (text: String, metadata: String)], lineSeparator: String = "\n") {
+	public init(fd: FileDescriptor = .init(rawValue: 2), logPrefixesByLevel: [Logger.Level: (text: String, textContinuation: String, metadata: String)], lineSeparator: String = "\n") {
 		self.outputFileDescriptor = fd
 		self.logPrefixesByLevel = logPrefixesByLevel
 		self.lineSeparator = lineSeparator
@@ -145,13 +152,13 @@ public struct CLTLogger : LogHandler {
 	}
 	
 	public func log(level: Logger.Level, message: Logger.Message, metadata logMetadata: Logger.Metadata?, source: String, file: String, function: String, line: UInt) {
-		let (textPrefix, metadataPrefix) = logPrefixesByLevel[level] ?? ("", "")
+		let (textPrefix, textContinuationPrefix, metadataPrefix) = logPrefixesByLevel[level] ?? ("", "", "")
 		
 		let fma: [String]
 		if let m = logMetadata, !m.isEmpty {fma = flatMetadataArray(metadata.merging(m, uniquingKeysWith: { _, new in new }))}
 		else                               {fma = flatMetadataCache}
 		
-		var fullString = (textPrefix + message.description + lineSeparator)
+		var fullString = (textPrefix + message.description.replacingOccurrences(of: "\n", with: lineSeparator + textContinuationPrefix, options: .literal) + lineSeparator)
 		for flatMeta in fma {
 			fullString.append(metadataPrefix + flatMeta + lineSeparator)
 		}
