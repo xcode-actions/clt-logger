@@ -34,7 +34,7 @@ dismissed it because:
 log format: every message is ended w/ a `\n` (the LoggerTextOutputStreamPipe
 adds the new-line directly). The only way to bypass this would be to create a
 new pipe.
-- It does not seems to be updated anymore (latest commit is from 2 years ago and
+- It does not seem to be updated anymore (latest commit is from 2 years ago and
 some code they duplicated from `apple/swift-log` has not been updated).
 - To log w/o buffering (as one should for a logger?) you also have to create a
 new pipe.
@@ -77,20 +77,22 @@ public struct CLTLogger : LogHandler {
 	/* Terminal does not support RGB colors, so we use 255-color palette. */
 	public static var defaultColorPrefixesByLogLevel: [Logger.Level: (text: String, metadata: String)] = {
 		func str(_ spaces: String, _ str: String, _ mods1: [SGR.Modifier], _ mods2: [SGR.Modifier]) -> (text: String, metadata: String) {
+			let bgColor = SGR.Modifier.reset
+			let fgColor = SGR.Modifier.fgColorTo4BitBrightBlack
 			return (
-				SGR.reset.rawValue + "[" + spaces + SGR(mods1).rawValue + str + SGR.reset.rawValue + "] " + SGR(mods2).rawValue,
+				SGR(.reset, bgColor, fgColor).rawValue + "[" + spaces + SGR(mods1).rawValue + str + SGR(.reset, bgColor, fgColor).rawValue + "]" + SGR.reset.rawValue + " " + SGR(mods2).rawValue,
 				"" + SGR(.fgColorTo4BitWhite).rawValue + "meta:" + SGR.reset.rawValue + "   " + SGR(.fgColorTo256PaletteValue(245)).rawValue
 			)
 		}
 		
 		return [
-			.trace:    str("", "TRC", [.fgColorTo256PaletteValue(247), .bold],               []),
-			.debug:    str("", "DBG", [.fgColorTo4BitYellow, .bold],                         []),
-			.info:     str("", "NFO", [.fgColorTo4BitGreen, .bold],                          []),
-			.notice:   str("", "NTC", [.fgColorTo256PaletteValue(32), .bold],                []),
-			.warning:  str("", "WRN", [.fgColorTo4BitMagenta, .bold],                        []),
-			.error:    str("", "ERR", [.fgColorTo4BitRed, .bold],                            [.bold]),
-			.critical: str("", "CRT", [.fgColorTo4BitBrightWhite, .bgColorTo4BitRed, .bold], [.bold])
+			.trace:    str("", "TRC", [.fgColorTo256PaletteValue(247), .bold],                     []),
+			.debug:    str("", "DBG", [.fgColorTo4BitYellow, .bold],                               []),
+			.info:     str("", "NFO", [.fgColorTo4BitGreen, .bold],                                []),
+			.notice:   str("", "NTC", [.fgColorTo4BitCyan, .bold],                                 []),
+			.warning:  str("", "WRN", [.fgColorTo4BitBrightMagenta, .bold],                        []),
+			.error:    str("", "ERR", [.fgColorTo4BitBrightRed, .bold],                            [.bold]),
+			.critical: str("", "CRT", [.fgColorTo4BitBrightWhite, .bgColorTo4BitBrightRed, .bold], [.bold])
 		]
 	}()
 	
