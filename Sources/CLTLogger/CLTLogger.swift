@@ -107,6 +107,7 @@ public struct CLTLogger : LogHandler {
 	}
 	
 	public var logLevel: Logger.Level = .info
+	/** **Not** thread-safe. */
 	public var metadata: Logger.Metadata = [:] {
 		didSet {flatMetadataCache = flatMetadataArray(metadata)}
 	}
@@ -161,20 +162,12 @@ public struct CLTLogger : LogHandler {
 		 * If another part of the program writes to fd, we might get interleaved
 		 * data, because they cannot be aware of our lock (and we cannot be aware
 		 * of theirs if they have one). */
-		#if canImport(Darwin)
-		os_unfair_lock_lock(&CLTLogger.lock)
-		#else
 		CLTLogger.lock.lock()
-		#endif
 		
 		/* Is there a better idea than silently drop the message in case of fail? */
 		_ = try? outputFileDescriptor.writeAll(data)
 		
-		#if canImport(Darwin)
-		os_unfair_lock_unlock(&CLTLogger.lock)
-		#else
 		CLTLogger.lock.unlock()
-		#endif
 	}
 	
 	private static func shouldEnableColors(for fd: FileDescriptor) -> Bool {
@@ -186,12 +179,9 @@ public struct CLTLogger : LogHandler {
 		#endif
 	}
 	
-	#if canImport(Darwin)
-	private static var lock = os_unfair_lock_s()
-	#else
-	/* There is probably a more efficient lock that exists… */
+	/* Do _not_ use os_unfair_lock, apparently it is bad in Swift:
+	 * https://twitter.com/grynspan/status/1392080373752995849 */
 	private static var lock = NSLock()
-	#endif
 	
 	private var flatMetadataCache = [String]()
 	
