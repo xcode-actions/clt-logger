@@ -68,6 +68,10 @@ final class CLTLoggerTests: XCTestCase {
 		logger.logLevel = .trace
 		logger.warning("Single line log")
 		logger.trace("Mutli-line\nlog.\nHow does it feel?", metadata: ["with": "metadata"])
+		logger.debug("Another multiline\nhere is the second line")
+		logger.info("Another multiline\nhere is the second line")
+		logger.notice("Another multiline\nhere is the second line")
+		logger.warning("Another multiline\nhere is the second line")
 		logger.error("Another multiline\nhere is the second line")
 		logger.critical("YAM!\nhere is the second line\nand why not a third one", metadata: ["with": ["metadata", "again"], "because": "42"])
 	}

@@ -46,7 +46,7 @@ public struct CLTLogger : LogHandler {
 	
 	public static var defaultTextPrefixesByLogLevel: [Logger.Level: (text: String, textContinuation: String, metadata: String)] = {
 		func addMeta(_ str: String) -> (text: String, textContinuation: String, metadata: String) {
-			return (str + ": ", String(repeating: "-", count: str.count) + ": ", "  meta: ")
+			return (str + ": ", String(repeating: "+", count: str.count) + ": ", "  meta: ")
 		}
 		return [
 			.trace:    addMeta("TRACE"),
@@ -60,22 +60,18 @@ public struct CLTLogger : LogHandler {
 	}()
 	
 	public static var defaultEmojiPrefixesByLogLevel: [Logger.Level: (text: String, textContinuation: String, metadata: String)] = {
-		func addMeta(_ str: String, _ padding: Int) -> (text: String, textContinuation: String, metadata: String) {
-			/* The padding correct alignment issues in the Terminal. However, the
-			 * emoji mode was designed for Xcode, and in Xcode there are no
-			 * alignment issues… */
-//			let padding = String(repeating: " ", count: padding)
-			let padding = ""
-			return (str + padding + " ", "-- ", "-- ⛓ " /* + " " In the Terminal, two spaces are needed after the link emoji instead of just one. */)
+		func addMeta(_ str: String, _ padding: String) -> (text: String, textContinuation: String, metadata: String) {
+			return (str + padding + " ", "++ ", "   ⛓ " /* + " " In the Terminal, two spaces are needed after the link emoji instead of just one. */)
 		}
+		/* The padding correct alignment issues. */
 		return [
-			.trace:    addMeta("💩", 0),
-			.debug:    addMeta("⚙️", 1),
-			.info:     addMeta("📔", 0),
-			.notice:   addMeta("🗣", 1),
-			.warning:  addMeta("⚠️", 1),
-			.error:    addMeta("❗️", 0),
-			.critical: addMeta("‼️", 1)
+			.trace:    addMeta("💩", ""/* For the Terminal: ""  */),
+			.debug:    addMeta("⚙️", ""/* For the Terminal: " " */),
+			.info:     addMeta("📔", ""/* For the Terminal: ""  */),
+			.notice:   addMeta("🗣", ""/* For the Terminal: " " */),
+			.warning:  addMeta("⚠️", ""/* For the Terminal: " " */),
+			.error:    addMeta("❗️", ""/* For the Terminal: ""  */),
+			.critical: addMeta("‼️", ""/* For the Terminal: " " */)
 		]
 	}()
 	
