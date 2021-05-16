@@ -81,7 +81,7 @@ public struct CLTLogger : LogHandler {
 			let fgColor = SGR.Modifier.fgColorTo4BitBrightBlack
 			return (
 				SGR(.reset, bgColor, fgColor).rawValue + "[" + spaces + SGR(mods1).rawValue + str + SGR(.reset, bgColor, fgColor).rawValue + "]" + SGR.reset.rawValue + " " + SGR(mods2).rawValue,
-				"" + SGR(.fgColorTo4BitWhite).rawValue + "meta:" + SGR.reset.rawValue + "   " + SGR(.fgColorTo256PaletteValue(245)).rawValue
+				"" + SGR(.fgColorTo4BitWhite).rawValue + "  meta:" + SGR.reset.rawValue + " " + SGR(.fgColorTo256PaletteValue(245)).rawValue
 			)
 		}
 		
