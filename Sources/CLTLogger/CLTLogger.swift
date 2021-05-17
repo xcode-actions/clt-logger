@@ -61,17 +61,24 @@ public struct CLTLogger : LogHandler {
 	
 	public static var defaultEmojiPrefixesByLogLevel: [Logger.Level: (text: String, textContinuation: String, metadata: String)] = {
 		func addMeta(_ str: String, _ padding: String) -> (text: String, textContinuation: String, metadata: String) {
-			return (str + padding + " ", "++ ", "   ⛓ " /* + " " In the Terminal, two spaces are needed after the link emoji instead of just one. */)
+			let linkPadding: String
+			#if TERMINAL_EMOJI
+			let str = str + padding
+			linkPadding = " "
+			#else
+			linkPadding = ""
+			#endif
+			return ("• " + str + " ", "+ " + str + " ", "  " + str + " ⛓ " + linkPadding)
 		}
 		/* The padding correct alignment issues. */
 		return [
-			.trace:    addMeta("💩", ""/* For the Terminal: ""  */),
-			.debug:    addMeta("⚙️", ""/* For the Terminal: " " */),
-			.info:     addMeta("📔", ""/* For the Terminal: ""  */),
-			.notice:   addMeta("🗣", ""/* For the Terminal: " " */),
-			.warning:  addMeta("⚠️", ""/* For the Terminal: " " */),
-			.error:    addMeta("❗️", ""/* For the Terminal: ""  */),
-			.critical: addMeta("‼️", ""/* For the Terminal: " " */)
+			.trace:    addMeta("💩", ""),
+			.debug:    addMeta("⚙️", " "),
+			.info:     addMeta("📔", ""),
+			.notice:   addMeta("🗣", " "),
+			.warning:  addMeta("⚠️", " "),
+			.error:    addMeta("❗️", ""),
+			.critical: addMeta("‼️", " ")
 		]
 	}()
 	
