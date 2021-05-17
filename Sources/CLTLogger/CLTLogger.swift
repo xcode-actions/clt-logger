@@ -68,7 +68,7 @@ public struct CLTLogger : LogHandler {
 			#else
 			linkPadding = ""
 			#endif
-			return ("• " + str + " ", "+ " + str + " ", "  " + str + " ⛓ " + linkPadding)
+			return ("" + str + " • ", "" + str + " ◦ ", "" + str + "   ⛓ " + linkPadding)
 		}
 		/* The padding correct alignment issues. */
 		return [
