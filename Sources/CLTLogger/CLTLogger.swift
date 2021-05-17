@@ -46,16 +46,16 @@ public struct CLTLogger : LogHandler {
 	
 	public static var defaultTextPrefixesByLogLevel: [Logger.Level: (text: String, textContinuation: String, metadata: String)] = {
 		func addMeta(_ str: String) -> (text: String, textContinuation: String, metadata: String) {
-			return (str + ": ", String(repeating: "+", count: str.count) + ": ", "  meta: ")
+			return (str + " ", "[ " + String(repeating: "+", count: str.count - 4) + " ] ", "  meta - ")
 		}
 		return [
-			.trace:    addMeta("TRACE"),
-			.debug:    addMeta("DEBUG"),
-			.info:     addMeta("INFO"),
-			.notice:   addMeta("* NOTICE"),
-			.warning:  addMeta("*** WARNING"),
-			.error:    addMeta("***** ERROR"),
-			.critical: addMeta("******* CRITICAL")
+			.trace:    addMeta("[ TRC ]"),
+			.debug:    addMeta("[ DBG ]"),
+			.info:     addMeta("[ NFO ]"),
+			.notice:   addMeta("[ NTC ]"),
+			.warning:  addMeta("[ WRN ]"),
+			.error:    addMeta("[ *ERR* ]"),
+			.critical: addMeta("[ **CRT** ]")
 		]
 	}()
 	
@@ -90,7 +90,6 @@ public struct CLTLogger : LogHandler {
 			return (
 				SGR(.reset, bgColor, fgColor).rawValue + "[" + spaces + SGR(mods1).rawValue + str + SGR(.reset, bgColor, fgColor).rawValue + "]" + SGR.reset.rawValue + " " + SGR(mods2).rawValue,
 				SGR(.reset, bgColor, fgColor).rawValue + "[" + spaces + SGR(mods1).rawValue + String(repeating: "+", count: str.count) + SGR(.reset, bgColor, fgColor).rawValue + "]" + SGR.reset.rawValue + " " + SGR(mods2).rawValue,
-//				SGR(.reset, .fgColorTo4BitWhite).rawValue + "[" + str + "]" + SGR.reset.rawValue + " " + SGR(mods2).rawValue,
 				"  " + SGR(.fgColorTo4BitWhite).rawValue + "meta:" + SGR.reset.rawValue + " " + SGR(.fgColorTo256PaletteValue(245)).rawValue
 			)
 		}
