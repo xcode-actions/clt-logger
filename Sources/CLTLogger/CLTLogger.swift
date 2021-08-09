@@ -124,7 +124,7 @@ public struct CLTLogger : LogHandler {
 	public let outputFileDescriptor: FileDescriptor
 	public let logPrefixesByLevel: [Logger.Level: (text: String, textContinuation: String, metadata: String)]
 	public let lineSeparator: String
-
+	
 	public init(fd: FileDescriptor = .standardError, logPrefixStyle: LogPrefixStyle = .auto, lineSeparator: String = "\n") {
 		let logPrefixStyle = (logPrefixStyle != .auto ? logPrefixStyle : (CLTLogger.shouldEnableColors(for: fd) ? .color : .emoji))
 		
