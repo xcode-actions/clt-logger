@@ -125,8 +125,7 @@ public struct CLTLogger : LogHandler {
 	public let logPrefixesByLevel: [Logger.Level: (text: String, textContinuation: String, metadata: String)]
 	public let lineSeparator: String
 
-	/* Sadly, FileDescriptor.standardError is not available in 0.0.1 */
-	public init(fd: FileDescriptor = .init(rawValue: 2), logPrefixStyle: LogPrefixStyle = .auto, lineSeparator: String = "\n") {
+	public init(fd: FileDescriptor = .standardError, logPrefixStyle: LogPrefixStyle = .auto, lineSeparator: String = "\n") {
 		let logPrefixStyle = (logPrefixStyle != .auto ? logPrefixStyle : (CLTLogger.shouldEnableColors(for: fd) ? .color : .emoji))
 		
 		let logPrefixesByLevel: [Logger.Level: (text: String, textContinuation: String, metadata: String)]
@@ -142,7 +141,7 @@ public struct CLTLogger : LogHandler {
 		self.init(fd: fd, logPrefixesByLevel: logPrefixesByLevel, lineSeparator: lineSeparator)
 	}
 	
-	public init(fd: FileDescriptor = .init(rawValue: 2), logPrefixesByLevel: [Logger.Level: (text: String, textContinuation: String, metadata: String)], lineSeparator: String = "\n") {
+	public init(fd: FileDescriptor = .standardError, logPrefixesByLevel: [Logger.Level: (text: String, textContinuation: String, metadata: String)], lineSeparator: String = "\n") {
 		self.outputFileDescriptor = fd
 		self.logPrefixesByLevel = logPrefixesByLevel
 		self.lineSeparator = lineSeparator
