@@ -3,6 +3,11 @@ François Lamboley <francois.lamboley@happn.com>
 
 A simple SwiftLog-compatible logger designed for Command Line Tools.
 
+== ⚠️ Crippled version for Swift 5.1
+
+The interface on this branch is not exactly the same as in the regular tags, and
+some initializer will return `nil` if the version of the OS is too old.
+
 == Usage
 TODO
 
