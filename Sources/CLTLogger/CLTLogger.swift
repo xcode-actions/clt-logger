@@ -1,7 +1,6 @@
 import Foundation
 
 import Logging
-import SystemPackage
 
 
 
@@ -121,12 +120,12 @@ public struct CLTLogger : LogHandler {
 		didSet {flatMetadataCache = flatMetadataArray(metadata)}
 	}
 	
-	public let outputFileDescriptor: FileDescriptor
+	public let outputFileDescriptor: FileHandle
 	public let logPrefixesByLevel: [Logger.Level: (text: String, textContinuation: String, metadata: String)]
 	public let lineSeparator: String
 
 	/* Sadly, FileDescriptor.standardError is not available in 0.0.1 */
-	public init(fd: FileDescriptor = .init(rawValue: 2), logPrefixStyle: LogPrefixStyle = .auto, lineSeparator: String = "\n") {
+	public init(fd: FileHandle = .standardError, logPrefixStyle: LogPrefixStyle = .auto, lineSeparator: String = "\n") {
 		let logPrefixStyle = (logPrefixStyle != .auto ? logPrefixStyle : (CLTLogger.shouldEnableColors(for: fd) ? .color : .emoji))
 		
 		let logPrefixesByLevel: [Logger.Level: (text: String, textContinuation: String, metadata: String)]
@@ -142,7 +141,7 @@ public struct CLTLogger : LogHandler {
 		self.init(fd: fd, logPrefixesByLevel: logPrefixesByLevel, lineSeparator: lineSeparator)
 	}
 	
-	public init(fd: FileDescriptor = .init(rawValue: 2), logPrefixesByLevel: [Logger.Level: (text: String, textContinuation: String, metadata: String)], lineSeparator: String = "\n") {
+	public init(fd: FileHandle = .standardError, logPrefixesByLevel: [Logger.Level: (text: String, textContinuation: String, metadata: String)], lineSeparator: String = "\n") {
 		self.outputFileDescriptor = fd
 		self.logPrefixesByLevel = logPrefixesByLevel
 		self.lineSeparator = lineSeparator
@@ -173,18 +172,24 @@ public struct CLTLogger : LogHandler {
 		 * of theirs if they have one). */
 		CLTLogger.lock.lock()
 		
-		/* Is there a better idea than silently drop the message in case of fail? */
-		_ = try? outputFileDescriptor.writeAll(data)
+		if #available(macOS 10.15.4, iOS 13.4, tvOS 13.4, watchOS 6.2, *) {
+			/* Is there a better idea than silently drop the message in case of
+			 * failure? */
+			_ = try? outputFileDescriptor.write(contentsOf: data)
+		} else {
+			/* WARNING: This can crash */
+			outputFileDescriptor.write(data)
+		}
 		
 		CLTLogger.lock.unlock()
 	}
 	
-	private static func shouldEnableColors(for fd: FileDescriptor) -> Bool {
+	private static func shouldEnableColors(for fd: FileHandle) -> Bool {
 		#if Xcode
 		/* Xcode runs program in a tty, but does not support colors */
 		return false
 		#else
-		return isatty(fd.rawValue) != 0
+		return isatty(fd.fileDescriptor) != 0
 		#endif
 	}
 	

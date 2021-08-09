@@ -438,8 +438,9 @@ public struct SGR : RawRepresentable, Hashable, CustomStringConvertible {
 		}
 		
 		public init?(rawValue: String) {
-			let s = Scanner(forParsing: rawValue)
+			guard #available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *) else {return nil}
 			
+			let s = Scanner(forParsing: rawValue)
 			self.init(scanner: s)
 			
 			guard s.isAtEnd else {
@@ -448,6 +449,7 @@ public struct SGR : RawRepresentable, Hashable, CustomStringConvertible {
 		}
 		
 		/* Note: This init probably has terrible perfs. */
+		@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 		init?(scanner: Scanner) {
 			struct DummyError : Error {}
 			let originalScannerIndex = scanner.currentIndex
@@ -744,8 +746,9 @@ public struct SGR : RawRepresentable, Hashable, CustomStringConvertible {
 	}
 	
 	public init?(rawValue: String) {
-		let s = Scanner(forParsing: rawValue)
+		guard #available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *) else {return nil}
 		
+		let s = Scanner(forParsing: rawValue)
 		self.init(scanner: s)
 		
 		guard s.isAtEnd else {
@@ -754,6 +757,7 @@ public struct SGR : RawRepresentable, Hashable, CustomStringConvertible {
 	}
 	
 	/* For symetry w/ SGR.Modifier init, but not really needed, at least for now. */
+	@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 	init?(scanner: Scanner) {
 		struct DummyError : Error {}
 		let originalScannerIndex = scanner.currentIndex
