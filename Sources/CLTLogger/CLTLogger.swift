@@ -124,7 +124,6 @@ public struct CLTLogger : LogHandler {
 	public let logPrefixesByLevel: [Logger.Level: (text: String, textContinuation: String, metadata: String)]
 	public let lineSeparator: String
 
-	/* Sadly, FileDescriptor.standardError is not available in 0.0.1 */
 	public init(fd: FileHandle = .standardError, logPrefixStyle: LogPrefixStyle = .auto, lineSeparator: String = "\n") {
 		let logPrefixStyle = (logPrefixStyle != .auto ? logPrefixStyle : (CLTLogger.shouldEnableColors(for: fd) ? .color : .emoji))
 		
@@ -172,14 +171,8 @@ public struct CLTLogger : LogHandler {
 		 * of theirs if they have one). */
 		CLTLogger.lock.lock()
 		
-		if #available(macOS 10.15.4, iOS 13.4, tvOS 13.4, watchOS 6.2, *) {
-			/* Is there a better idea than silently drop the message in case of
-			 * failure? */
-			_ = try? outputFileDescriptor.write(contentsOf: data)
-		} else {
-			/* WARNING: This can crash */
-			outputFileDescriptor.write(data)
-		}
+		/* WARNING: This can crash */
+		outputFileDescriptor.write(data)
 		
 		CLTLogger.lock.unlock()
 	}
