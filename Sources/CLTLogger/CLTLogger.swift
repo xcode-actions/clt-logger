@@ -46,15 +46,18 @@ public struct CLTLogger : LogHandler {
 	
 	public static var defaultTextPrefixesByLogLevel: [Logger.Level: (text: String, textContinuation: String, metadata: String)] = {
 		func addMeta(_ str: String) -> (text: String, textContinuation: String, metadata: String) {
-			return (str + " ", "[ " + String(repeating: "+", count: str.count - 4) + " ] ", "  meta - ")
+			let len1 = str.count - 2
+			let len2 = str.trimmingCharacters(in: .init(charactersIn: "[ ]")).count
+			let spaces = String(repeating: " ", count: (len1 - len2)/2)
+			return (str + " ", "[" + spaces + String(repeating: "+", count: len2) + spaces + "] ", "    meta  - ")
 		}
 		return [
-			.trace:    addMeta("[ TRC ]"),
-			.debug:    addMeta("[ DBG ]"),
-			.info:     addMeta("[ NFO ]"),
-			.notice:   addMeta("[ NTC ]"),
-			.warning:  addMeta("[ WRN ]"),
-			.error:    addMeta("[ *ERR* ]"),
+			.trace:    addMeta("[   TRC   ]"),
+			.debug:    addMeta("[   DBG   ]"),
+			.info:     addMeta("[   NFO   ]"),
+			.notice:   addMeta("[   NTC   ]"),
+			.warning:  addMeta("[   WRN   ]"),
+			.error:    addMeta("[  *ERR*  ]"),
 			.critical: addMeta("[ **CRT** ]")
 		]
 	}()
