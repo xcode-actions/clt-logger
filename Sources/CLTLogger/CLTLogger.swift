@@ -6,42 +6,40 @@ import SystemPackage
 
 
 /**
-A logger designed for Command Line Tools.
-
-A few things:
-- Output is UTF8. Always.
-- There is no buffering. We use `write(2)`.
-- Ouptuts to stderr by default. The idea is: “usable” text (text that is
-actually what the user asked for when launching your tool) should be outputted
-to stdout, presumably using `print`, the rest should be on stderr. If needed you
-can setup the logger to use any fd, the logger will simply `write(2)` to it.
-- Ouptut has special control chars for colors if program is not compiled w/
-Xcode and output fd is a tty. You can force using or force not using colors.
-- If the write syscall fails, the log is lost (or partially lost; interrupts are
-retried; see SystemPackage for more info).
-- You can configure the logger not to automatically add a new line after each
-message. By default, new lines are added.
-- As this logger is specially dedicated to CLT programs, the text it outputs is
-as small as possible on purpose: only the message is displayed, w/ a potential
-prefix indicating the log level (or a color if colors are allowed).
-
-A § (Xcode is dumb and needs a § here for the comment to be properly formatted).
-
-- Note: An interesting logger is `Adorkable/swift-log-format-and-pipe`. I almost
-used it (by creating extensions for a clt format and co), but ultimately
-dismissed it because:
-- Despite its name (which contains formatter), you are not free to choose the
-log format: every message is ended w/ a `\n` (the LoggerTextOutputStreamPipe
-adds the new-line directly). The only way to bypass this would be to create a
-new pipe.
-- It does not seem to be updated anymore (latest commit is from 2 years ago and
-some code they duplicated from `apple/swift-log` has not been updated).
-- To log w/o buffering (as one should for a logger?) you also have to create a
-new pipe.
-- Overall I love the idea of the project, but I’m not fond of the realization.
-It is a feeling; I’m not sure of the reasons behind it. Might be related to the
-fact that we cannot use the project as-is, or that the genericity the Adorkable
-logger introduces is not really needed (creating a log handler is not complex). */
+ A logger designed for Command Line Tools.
+ 
+ A few things:
+ + Output is UTF8. Always.
+ + There is no buffering. We use `write(2)`.
+ + Ouptuts to stderr by default. The idea is: “usable” text (text that is
+ actually what the user asked for when launching your tool) should be output to
+ stdout, presumably using `print`, the rest should be on stderr. If needed you
+ can setup the logger to use any fd, the logger will simply `write(2)` to it.
+ + Ouptut has special control chars for colors if program is not compiled w/
+ Xcode and output fd is a tty. You can force using or force not using colors.
+ + If the write syscall fails, the log is lost (or partially lost; interrupts
+ are retried; see SystemPackage for more info).
+ + You can configure the logger not to automatically add a new line after each
+ message. By default, new lines are added.
+ + As this logger is specially dedicated to CLT programs, the text it outputs is
+ as small as possible on purpose: only the message is displayed, w/ a potential
+ prefix indicating the log level (or a color if colors are allowed).
+ 
+ - Note: An interesting logger is `Adorkable/swift-log-format-and-pipe`. I
+ almost used it (by creating extensions for a clt format and co), but ultimately
+ dismissed it because:
+ + Despite its name (which contains formatter), you are not free to choose the
+ log format: every message is ended w/ a `\n` (the LoggerTextOutputStreamPipe
+ adds the new-line directly). The only way to bypass this would be to create a
+ new pipe.
+ + It does not seem to be updated anymore (latest commit is from 2 years ago
+ and some code they duplicated from `apple/swift-log` has not been updated).
+ + To log w/o buffering (as one should for a logger?) you also have to create a
+ new pipe.
+ + Overall I love the idea of the project, but I’m not fond of the realization.
+ It is a feeling; I’m not sure of the reasons behind it. Might be related to the
+ fact that we cannot use the project as-is, or that the genericity the Adorkable
+ logger introduces is not really needed (creating a log handler is not complex). */
 public struct CLTLogger : LogHandler {
 	
 	public static var defaultTextPrefixesByLogLevel: [Logger.Level: (text: String, textContinuation: String, metadata: String)] = {
@@ -65,12 +63,12 @@ public struct CLTLogger : LogHandler {
 	public static var defaultEmojiPrefixesByLogLevel: [Logger.Level: (text: String, textContinuation: String, metadata: String)] = {
 		func addMeta(_ str: String, _ padding: String) -> (text: String, textContinuation: String, metadata: String) {
 			let linkPadding: String
-			#if TERMINAL_EMOJI
+#if TERMINAL_EMOJI
 			let str = str + padding
 			linkPadding = " "
-			#else
+#else
 			linkPadding = ""
-			#endif
+#endif
 			return ("" + str + " • ", "" + str + " ◦ ", "" + str + "   ⛓ " + linkPadding)
 		}
 		/* The padding correct alignment issues. */
@@ -169,10 +167,10 @@ public struct CLTLogger : LogHandler {
 		let data = Data(fullString.utf8)
 		
 		/* We lock, because the writeAll function might split the write in more
-		 * than 1 write (if the write system call only writes a part of the data).
-		 * If another part of the program writes to fd, we might get interleaved
-		 * data, because they cannot be aware of our lock (and we cannot be aware
-		 * of theirs if they have one). */
+		 * than 1 write (if the write system call only writes a part of the data).
+		 * If another part of the program writes to fd, we might get interleaved
+		 * data, because they cannot be aware of our lock (and we cannot be aware
+		 * of theirs if they have one). */
 		CLTLogger.lock.lock()
 		
 		/* Is there a better idea than silently drop the message in case of fail? */
@@ -182,16 +180,16 @@ public struct CLTLogger : LogHandler {
 	}
 	
 	private static func shouldEnableColors(for fd: FileDescriptor) -> Bool {
-		#if Xcode
+#if Xcode
 		/* Xcode runs program in a tty, but does not support colors */
 		return false
-		#else
+#else
 		return isatty(fd.rawValue) != 0
-		#endif
+#endif
 	}
 	
 	/* Do _not_ use os_unfair_lock, apparently it is bad in Swift:
-	 * https://twitter.com/grynspan/status/1392080373752995849 */
+	 * https://twitter.com/grynspan/status/1392080373752995849 */
 	private static var lock = NSLock()
 	
 	private var flatMetadataCache = [String]()
@@ -207,8 +205,8 @@ public struct CLTLogger : LogHandler {
 		guard !metadata.isEmpty else {return "[:]"}
 		
 		/* Basically we’ll return "\(metadata) ", but keys will be sorted.
-		 * Most of the implem was stolen from Swift source code:
-		 *    https://github.com/apple/swift/blob/swift-5.3.3-RELEASE/stdlib/public/core/Dictionary.swift#L1681*/
+		 * Most of the implem was stolen from Swift source code:
+		 *    https://github.com/apple/swift/blob/swift-5.3.3-RELEASE/stdlib/public/core/Dictionary.swift#L1681 */
 		var result = "["
 		var first = true
 		for (k, v) in metadata.lazy.sorted(by: { $0.key < $1.key }) {

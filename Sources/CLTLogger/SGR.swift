@@ -3,38 +3,40 @@ import Foundation
 
 
 /**
-A few links:
-
-- [An answer on Stackoverflow](https://stackoverflow.com/a/33206814)
-- [Wikipedia page to SGR](https://en.wikipedia.org/wiki/ANSI_escape_code#SGR_(Select_Graphic_Rendition)_parameters)
-- [The 4-bits colors table (in Wikipedia)](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
-- [The 4-bits colors table (direct image link)](https://i.stack.imgur.com/9UVnC.png)
-- [The 8-bits colors table (in Wikipedia)](https://en.wikipedia.org/wiki/ANSI_escape_code#8-bit)
-- [The 8-bits colors table (direct image link)](https://i.stack.imgur.com/KTSQa.png)
-- [List of Terminals supporting True Colors](https://gist.github.com/XVilka/8346728)
-- [The ODA Specs](https://en.wikipedia.org/wiki/Open_Document_Architecture#External_links) aka. CCITT T.411-T.424 (equivalent to ISO 8613, but freely downloadable) */
+ A struct representing one Select Graphic Rendition (SGR).
+ 
+ A few links:
+ 
+ - [An answer on Stackoverflow](https://stackoverflow.com/a/33206814)
+ - [Wikipedia page to SGR](https://en.wikipedia.org/wiki/ANSI_escape_code#SGR_(Select_Graphic_Rendition)_parameters)
+ - [The 4-bits colors table (in Wikipedia)](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
+ - [The 4-bits colors table (direct image link)](https://i.stack.imgur.com/9UVnC.png)
+ - [The 8-bits colors table (in Wikipedia)](https://en.wikipedia.org/wiki/ANSI_escape_code#8-bit)
+ - [The 8-bits colors table (direct image link)](https://i.stack.imgur.com/KTSQa.png)
+ - [List of Terminals supporting True Colors](https://gist.github.com/XVilka/8346728)
+ - [The ODA Specs](https://en.wikipedia.org/wiki/Open_Document_Architecture#External_links) aka. CCITT T.411-T.424 (equivalent to ISO 8613, but freely downloadable) */
 public struct SGR : RawRepresentable, Hashable, CustomStringConvertible {
 	
 	public enum Modifier : RawRepresentable, Hashable, CustomStringConvertible {
 		
-		/** Reset/Normal – All attributes off */
+		/** Reset/Normal -- All attributes off */
 		case reset
 		/** Bold or increased intensity */
 		case bold
-		/** Decreased intensity – Not widely supported */
+		/** Decreased intensity -- Not widely supported */
 		case faint
-		/** Italic – Not widely supported – Sometimes treated as inverse (aka. reverse video) */
+		/** Italic -- Not widely supported -- Sometimes treated as inverse (aka. reverse video) */
 		case italic
 		case underline
-		/** Slow blink – less than 150 per minute */
+		/** Slow blink -- less than 150 per minute */
 		case slowBlink
-		/** Rapid Blink – MS-DOS ANSI.SYS; 150+ per minute – Not widely supported */
+		/** Rapid Blink -- MS-DOS ANSI.SYS; 150+ per minute -- Not widely supported */
 		case rapidBlink
 		/** Swap foreground and background colors */
 		case reverseVideo
-		/** Not widely supported – Not in ODA */
+		/** Not widely supported -- Not in ODA */
 		case conceal
-		/** Characters legible, but marked for deletion – Not widely supported */
+		/** Characters legible, but marked for deletion -- Not widely supported */
 		case crossedOut
 		/** Default font */
 		case primaryFont
@@ -47,7 +49,7 @@ public struct SGR : RawRepresentable, Hashable, CustomStringConvertible {
 		case alternateFont7
 		case alternateFont8
 		case alternateFont9
-		/** Blackletter font – Hardly ever supported – Not in ODA */
+		/** Blackletter font -- Hardly ever supported -- Not in ODA */
 		case fraktur
 		/** Bold off not widely supported; double underline hardly ever supported */
 		case boldOffOrDoubleUnderline
@@ -57,126 +59,130 @@ public struct SGR : RawRepresentable, Hashable, CustomStringConvertible {
 		/** Not singly or doubly underlined */
 		case underlineOff
 		case blinkOff
-		/** Proportional spacing – ITU T.61 and T.416; not known to be used on terminals */
+		/** Proportional spacing -- ITU T.61 and T.416; not known to be used on terminals */
 		case variableSpacing
 		case reverseVideoOff
-		/** Reveal – Not in ODA */
+		/** Reveal -- Not in ODA */
 		case concealOff
 		/** Not crossed out */
 		case crossedOutOff
 		/**
-		Fg to color #0. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
-		
-		- Note: It’s color index #1 in ODA Specs. */
+		 Fg to color #0. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
+		 
+		 - Note: It’s color index #1 in ODA Specs. */
 		case fgColorTo4BitBlack
 		/**
-		Fg to color #1. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
-		
-		- Note: It’s color index #2 in ODA Specs. */
+		 Fg to color #1. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
+		 
+		 - Note: It’s color index #2 in ODA Specs. */
 		case fgColorTo4BitRed
 		/**
-		Fg to color #2. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
-		
-		- Note: It’s color index #3 in ODA Specs. */
+		 Fg to color #2. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
+		 
+		 - Note: It’s color index #3 in ODA Specs. */
 		case fgColorTo4BitGreen
 		/**
-		Fg to color #3. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
-		
-		- Note: It’s color index #4 in ODA Specs. */
+		 Fg to color #3. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
+		 
+		 - Note: It’s color index #4 in ODA Specs. */
 		case fgColorTo4BitYellow
 		/**
-		Fg to color #4. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
-		
-		- Note: It’s color index #5 in ODA Specs. */
+		 Fg to color #4. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
+		 
+		 - Note: It’s color index #5 in ODA Specs. */
 		case fgColorTo4BitBlue
 		/**
-		Fg to color #5. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
-		
-		- Note: It’s color index #6 in ODA Specs. */
+		 Fg to color #5. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
+		 
+		 - Note: It’s color index #6 in ODA Specs. */
 		case fgColorTo4BitMagenta
 		/**
-		Fg to color #6. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
-		
-		- Note: It’s color index #7 in ODA Specs. */
+		 Fg to color #6. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
+		 
+		 - Note: It’s color index #7 in ODA Specs. */
 		case fgColorTo4BitCyan
 		/**
-		Fg to color #7. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
-		
-		- Note: It’s color index #0 in ODA Specs. */
+		 Fg to color #7. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
+		 
+		 - Note: It’s color index #0 in ODA Specs. */
 		case fgColorTo4BitWhite
 		case fgColorToImplementationDefined
 		case fgColorToTransparent
 		case fgColorToRGB(red: UInt8, green: UInt8, blue: UInt8)
-		/* Note: For ODA formats, I assumed color value type is UInt8 */
+		/** - Note: I assumed color value type is UInt8 for ODA format. */
 		case fgColorToRGBUsingODAFormat(red: UInt8?, green: UInt8?, blue: UInt8?, colorSpaceInfo: ColorSpaceInfo?)
+		/** - Note: I assumed color value type is UInt8 for ODA format. */
 		case fgColorToCMYUsingODAFormat(cyan: UInt8?, magenta: UInt8?, yellow: UInt8?, colorSpaceInfo: ColorSpaceInfo?)
+		/** - Note: I assumed color value type is UInt8 for ODA format. */
 		case fgColorToCMYKUsingODAFormat(cyan: UInt8?, magenta: UInt8?, yellow: UInt8?, black: UInt8?, colorSpaceInfo: ColorSpaceInfo?)
 		/** See the [8-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#8-bit) */
 		case fgColorTo256PaletteValue(UInt8)
 		/**
-		Same as `fgColorTo256PaletteValue`, but using ODA format, which uses a
-		colon instead of a semicolon for the separator. See the [ODA Specs](https://en.wikipedia.org/wiki/Open_Document_Architecture#External_links)
-		aka. CCITT T.411-T.424 (equivalent to ISO 8613, but freely downloadable). */
+		 Same as `fgColorTo256PaletteValue`, but using ODA format, which uses a
+		 colon instead of a semicolon for the separator. See the [ODA Specs](https://en.wikipedia.org/wiki/Open_Document_Architecture#External_links)
+		 aka. CCITT T.411-T.424 (equivalent to ISO 8613, but freely downloadable). */
 		case fgColorTo256PaletteValueODAFormat(UInt8?)
 		
-		/** Implementation defined (according to standard) – Not in ODA */
+		/** Implementation defined (according to standard) -- Not in ODA */
 		case fgColorToDefault
 		
 		/**
-		Bg to color #0. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
-		
-		- Note: It’s color index #1 in ODA Specs. */
+		 Bg to color #0. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
+		 
+		 - Note: It’s color index #1 in ODA Specs. */
 		case bgColorTo4BitBlack
 		/**
-		Bg to color #1. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
-		
-		- Note: It’s color index #2 in ODA Specs. */
+		 Bg to color #1. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
+		 
+		 - Note: It’s color index #2 in ODA Specs. */
 		case bgColorTo4BitRed
 		/**
-		Bg to color #2. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
-		
-		- Note: It’s color index #3 in ODA Specs. */
+		 Bg to color #2. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
+		 
+		 - Note: It’s color index #3 in ODA Specs. */
 		case bgColorTo4BitGreen
 		/**
-		Bg to color #3. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
-		
-		- Note: It’s color index #4 in ODA Specs. */
+		 Bg to color #3. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
+		 
+		 - Note: It’s color index #4 in ODA Specs. */
 		case bgColorTo4BitYellow
 		/**
-		Bg to color #4. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
-		
-		- Note: It’s color index #5 in ODA Specs. */
+		 Bg to color #4. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
+		 
+		 - Note: It’s color index #5 in ODA Specs. */
 		case bgColorTo4BitBlue
 		/**
-		Bg to color #5. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
-		
-		- Note: It’s color index #6 in ODA Specs. */
+		 Bg to color #5. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
+		 
+		 - Note: It’s color index #6 in ODA Specs. */
 		case bgColorTo4BitMagenta
 		/**
-		Bg to color #6. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
-		
-		- Note: It’s color index #7 in ODA Specs. */
+		 Bg to color #6. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
+		 
+		 - Note: It’s color index #7 in ODA Specs. */
 		case bgColorTo4BitCyan
 		/**
-		Bg to color #7. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
-		
-		- Note: It’s color index #0 in ODA Specs. */
+		 Bg to color #7. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
+		 
+		 - Note: It’s color index #0 in ODA Specs. */
 		case bgColorTo4BitWhite
 		case bgColorToTransparent
 		case bgColorToRGB(red: UInt8, green: UInt8, blue: UInt8)
-		/* Note: For ODA formats, I assumed color value type is UInt8 */
+		/** - Note: I assumed color value type is UInt8 for ODA format. */
 		case bgColorToRGBUsingODAFormat(red: UInt8?, green: UInt8?, blue: UInt8?, colorSpaceInfo: ColorSpaceInfo?)
+		/** - Note: I assumed color value type is UInt8 for ODA format. */
 		case bgColorToCMYUsingODAFormat(cyan: UInt8?, magenta: UInt8?, yellow: UInt8?, colorSpaceInfo: ColorSpaceInfo?)
+		/** - Note: I assumed color value type is UInt8 for ODA format. */
 		case bgColorToCMYKUsingODAFormat(cyan: UInt8?, magenta: UInt8?, yellow: UInt8?, black: UInt8?, colorSpaceInfo: ColorSpaceInfo?)
 		/** See the [8-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#8-bit) */
 		case bgColorTo256PaletteValue(UInt8)
 		/**
-		Same as `bgColorTo256PaletteValue`, but using ODA format, which uses a
-		colon instead of a semicolon for the separator. See the [ODA Specs](https://en.wikipedia.org/wiki/Open_Document_Architecture#External_links)
-		aka. CCITT T.411-T.424 (equivalent to ISO 8613, but freely downloadable). */
+		 Same as `bgColorTo256PaletteValue`, but using ODA format, which uses a
+		 colon instead of a semicolon for the separator. See the [ODA Specs](https://en.wikipedia.org/wiki/Open_Document_Architecture#External_links)
+		 aka. CCITT T.411-T.424 (equivalent to ISO 8613, but freely downloadable). */
 		case bgColorTo256PaletteValueODAFormat(UInt8?)
 		
-		/** Implementation defined (according to standard) – Not in ODA */
+		/** Implementation defined (according to standard) -- Not in ODA */
 		case bgColorToDefault
 		
 		/** T.61 and T.416 */
@@ -197,13 +203,13 @@ public struct SGR : RawRepresentable, Hashable, CustomStringConvertible {
 		/** Not in standard */
 		case underlineColorToDefault
 		
-		/** Line on right side – Hardly ever supported */
+		/** Line on right side -- Hardly ever supported */
 		case ideogramUnderline
-		/** Double-line on right side – Hardly ever supported */
+		/** Double-line on right side -- Hardly ever supported */
 		case ideogramDoubleUnderline
-		/** Line on left side – Hardly ever supported */
+		/** Line on left side -- Hardly ever supported */
 		case ideogramOverline
-		/** Double-line on left side – Hardly ever supported */
+		/** Double-line on left side -- Hardly ever supported */
 		case ideogramDoubleOverline
 		/** Hardly ever supported */
 		case ideogramStressMarking
@@ -218,91 +224,91 @@ public struct SGR : RawRepresentable, Hashable, CustomStringConvertible {
 		case subOrSubScriptOff
 		
 		/**
-		Fg to bright color #0. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
-		
-		Not standard (equivalent to `.fgColorTo4BitBlack` + `.bold` IIUC). */
+		 Fg to bright color #0. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
+		 
+		 Not standard (equivalent to `.fgColorTo4BitBlack` + `.bold` IIUC). */
 		case fgColorTo4BitBrightBlack
 		/**
-		Fg to bright color #1. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
-		
-		Not standard (equivalent to `.fgColorTo4BitRed` + `.bold` IIUC). */
+		 Fg to bright color #1. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
+		 
+		 Not standard (equivalent to `.fgColorTo4BitRed` + `.bold` IIUC). */
 		case fgColorTo4BitBrightRed
 		/**
-		Fg to bright color #2. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
-		
-		Not standard (equivalent to `.fgColorTo4BitGreen` + `.bold` IIUC). */
+		 Fg to bright color #2. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
+		 
+		 Not standard (equivalent to `.fgColorTo4BitGreen` + `.bold` IIUC). */
 		case fgColorTo4BitBrightGreen
 		/**
-		Fg to bright color #3. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
-		
-		Not standard (equivalent to `.fgColorTo4BitYellow` + `.bold` IIUC). */
+		 Fg to bright color #3. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
+		 
+		 Not standard (equivalent to `.fgColorTo4BitYellow` + `.bold` IIUC). */
 		case fgColorTo4BitBrightYellow
 		/**
-		Fg to bright color #4. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
-		
-		Not standard (equivalent to `.fgColorTo4BitBlue` + `.bold` IIUC). */
+		 Fg to bright color #4. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
+		 
+		 Not standard (equivalent to `.fgColorTo4BitBlue` + `.bold` IIUC). */
 		case fgColorTo4BitBrightBlue
 		/**
-		Fg to bright color #5. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
-		
-		Not standard (equivalent to `.fgColorTo4BitMagenta` + `.bold` IIUC). */
+		 Fg to bright color #5. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
+		 
+		 Not standard (equivalent to `.fgColorTo4BitMagenta` + `.bold` IIUC). */
 		case fgColorTo4BitBrightMagenta
 		/**
-		Fg to bright color #6. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
-		
-		Not standard (equivalent to `.fgColorTo4BitCyan` + `.bold` IIUC). */
+		 Fg to bright color #6. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
+		 
+		 Not standard (equivalent to `.fgColorTo4BitCyan` + `.bold` IIUC). */
 		case fgColorTo4BitBrightCyan
 		/**
-		Fg to bright color #7. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
-		
-		Not standard (equivalent to `.fgColorTo4BitWhite` + `.bold` IIUC). */
+		 Fg to bright color #7. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
+		 
+		 Not standard (equivalent to `.fgColorTo4BitWhite` + `.bold` IIUC). */
 		case fgColorTo4BitBrightWhite
 		
 		/**
-		Bg to bright color #0. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
-		
-		Not standard (equivalent to `.bgColorTo4BitBlack` + `.bold` + `.reverseVideo` IIUC). */
+		 Bg to bright color #0. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
+		 
+		 Not standard (equivalent to `.bgColorTo4BitBlack` + `.bold` + `.reverseVideo` IIUC). */
 		case bgColorTo4BitBrightBlack
 		/**
-		Bg to bright color #1. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
-		
-		Not standard (equivalent to `.bgColorTo4BitRed` + `.bold` + `.reverseVideo` IIUC). */
+		 Bg to bright color #1. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
+		 
+		 Not standard (equivalent to `.bgColorTo4BitRed` + `.bold` + `.reverseVideo` IIUC). */
 		case bgColorTo4BitBrightRed
 		/**
-		Bg to bright color #2. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
-		
-		Not standard (equivalent to `.bgColorTo4BitGreen` + `.bold` + `.reverseVideo` IIUC). */
+		 Bg to bright color #2. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
+		 
+		 Not standard (equivalent to `.bgColorTo4BitGreen` + `.bold` + `.reverseVideo` IIUC). */
 		case bgColorTo4BitBrightGreen
 		/**
-		Bg to bright color #3. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
-		
-		Not standard (equivalent to `.bgColorTo4BitYellow` + `.bold` + `.reverseVideo` IIUC). */
+		 Bg to bright color #3. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
+		 
+		 Not standard (equivalent to `.bgColorTo4BitYellow` + `.bold` + `.reverseVideo` IIUC). */
 		case bgColorTo4BitBrightYellow
 		/**
-		Bg to bright color #4. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
-		
-		Not standard (equivalent to `.bgColorTo4BitBlue` + `.bold` + `.reverseVideo` IIUC). */
+		 Bg to bright color #4. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
+		 
+		 Not standard (equivalent to `.bgColorTo4BitBlue` + `.bold` + `.reverseVideo` IIUC). */
 		case bgColorTo4BitBrightBlue
 		/**
-		Bg to bright color #5. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
-		
-		Not standard (equivalent to `.bgColorTo4BitMagenta` + `.bold` + `.reverseVideo` IIUC). */
+		 Bg to bright color #5. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
+		 
+		 Not standard (equivalent to `.bgColorTo4BitMagenta` + `.bold` + `.reverseVideo` IIUC). */
 		case bgColorTo4BitBrightMagenta
 		/**
-		Bg to bright color #6. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
-		
-		Not standard (equivalent to `.bgColorTo4BitCyan` + `.bold` + `.reverseVideo` IIUC). */
+		 Bg to bright color #6. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
+		 
+		 Not standard (equivalent to `.bgColorTo4BitCyan` + `.bold` + `.reverseVideo` IIUC). */
 		case bgColorTo4BitBrightCyan
 		/**
-		Bg to bright color #7. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
-		
-		Not standard (equivalent to `.bgColorTo4BitWhite` + `.bold` + `.reverseVideo` IIUC). */
+		 Bg to bright color #7. See the [4-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit)
+		 
+		 Not standard (equivalent to `.bgColorTo4BitWhite` + `.bold` + `.reverseVideo` IIUC). */
 		case bgColorTo4BitBrightWhite
 		
 		public struct ColorSpaceInfo {
 			
 			/**
-			- Note: I did not know the type for this one, so I assumed `Int`. */
+			 - Note: I did not know the type for this one, so I assumed `Int`. */
 			public var colorSpaceId: Int?
 			public var colorSpaceTolerance: Int?
 			public var colorSpaceAssociatedWithTolerance: ColorSpaceForTolerance?
@@ -470,11 +476,11 @@ public struct SGR : RawRepresentable, Hashable, CustomStringConvertible {
 						case "48": isFgColor = false
 						default:
 							/* We only consider the 38 and 48 cases, which should be
-							 * the only valid ones, and the only one we allow
-							 * building.
-							 * Note however, it might be possible to get the 58 case
-							 * too (underline color), though because it is not part
-							 * of the ODA it shouldn’t be valid with this notation. */
+							 * the only valid ones, and the only one we allow
+							 * building.
+							 * Note however, it might be possible to get the 58 case
+							 * too (underline color), though because it is not part
+							 * of the ODA it shouldn’t be valid with this notation. */
 							throw DummyError()
 					}
 					let colorFormat = subScanner.scanUpToString(":") ?? ""
@@ -598,8 +604,8 @@ public struct SGR : RawRepresentable, Hashable, CustomStringConvertible {
 					switch colorType {
 						case "2":
 							/* Wikipedia says empty values are treated as 0. But
-							 * Terminal for instance does not seem to know that. We
-							 * don’t care, we do like Wikipedia says. */
+							 * Terminal for instance does not seem to know that. We
+							 * don’t care, we do like Wikipedia says. */
 							let r = try uint8(scanner.scanUpToString(String(Self.separatorChar)) ?? "0")
 							guard scanner.scanCharacter() == Self.separatorChar else {throw DummyError()}
 							let g = try uint8(scanner.scanUpToString(String(Self.separatorChar)) ?? "0")
@@ -779,7 +785,7 @@ public struct SGR : RawRepresentable, Hashable, CustomStringConvertible {
 				modifiers.append(modifier)
 				guard !contentScanner.isAtEnd else {break}
 				/* A modifier has been parsed. Either scan location is now at a
-				 * semicolon or at the end. If on semicolon we must consume it. */
+				 * semicolon or at the end. If on semicolon we must consume it. */
 				let c = contentScanner.scanCharacter()
 				assert(c == Modifier.separatorChar)
 			}
