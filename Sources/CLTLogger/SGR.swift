@@ -118,9 +118,8 @@ public struct SGR : RawRepresentable, Hashable, CustomStringConvertible {
 		/** See the [8-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#8-bit) */
 		case fgColorTo256PaletteValue(UInt8)
 		/**
-		 Same as `fgColorTo256PaletteValue`, but using ODA format, which uses a
-		 colon instead of a semicolon for the separator. See the [ODA Specs](https://en.wikipedia.org/wiki/Open_Document_Architecture#External_links)
-		 aka. CCITT T.411-T.424 (equivalent to ISO 8613, but freely downloadable). */
+		 Same as `fgColorTo256PaletteValue`, but using ODA format, which uses a colon instead of a semicolon for the separator.
+		 See the [ODA Specs](https://en.wikipedia.org/wiki/Open_Document_Architecture#External_links) aka. CCITT T.411-T.424 (equivalent to ISO 8613, but freely downloadable). */
 		case fgColorTo256PaletteValueODAFormat(UInt8?)
 		
 		/** Implementation defined (according to standard) -- Not in ODA */
@@ -177,9 +176,8 @@ public struct SGR : RawRepresentable, Hashable, CustomStringConvertible {
 		/** See the [8-bits colors table](https://en.wikipedia.org/wiki/ANSI_escape_code#8-bit) */
 		case bgColorTo256PaletteValue(UInt8)
 		/**
-		 Same as `bgColorTo256PaletteValue`, but using ODA format, which uses a
-		 colon instead of a semicolon for the separator. See the [ODA Specs](https://en.wikipedia.org/wiki/Open_Document_Architecture#External_links)
-		 aka. CCITT T.411-T.424 (equivalent to ISO 8613, but freely downloadable). */
+		 Same as `bgColorTo256PaletteValue`, but using ODA format, which uses a colon instead of a semicolon for the separator.
+		 See the [ODA Specs](https://en.wikipedia.org/wiki/Open_Document_Architecture#External_links) aka. CCITT T.411-T.424 (equivalent to ISO 8613, but freely downloadable). */
 		case bgColorTo256PaletteValueODAFormat(UInt8?)
 		
 		/** Implementation defined (according to standard) -- Not in ODA */
@@ -475,12 +473,10 @@ public struct SGR : RawRepresentable, Hashable, CustomStringConvertible {
 						case "38": isFgColor = true
 						case "48": isFgColor = false
 						default:
-							/* We only consider the 38 and 48 cases, which should be
-							 * the only valid ones, and the only one we allow
-							 * building.
-							 * Note however, it might be possible to get the 58 case
-							 * too (underline color), though because it is not part
-							 * of the ODA it shouldn’t be valid with this notation. */
+							/* We only consider the 38 and 48 cases, which should be the only valid ones,
+							 *  and the only one we allow building.
+							 * Note however, it might be possible to get the 58 case too (underline color),
+							 *  though because it is not part of the ODA it shouldn’t be valid with this notation. */
 							throw DummyError()
 					}
 					let colorFormat = subScanner.scanUpToString(":") ?? ""
@@ -593,7 +589,7 @@ public struct SGR : RawRepresentable, Hashable, CustomStringConvertible {
 					}
 					func uint8(_ s: String) throws -> UInt8 {
 						guard
-							s.rangeOfCharacter(from: Self.numCharset.inverted) == nil, /* Prevents “+2” from being parsed */
+							s.rangeOfCharacter(from: Self.numCharset.inverted) == nil, /* Prevents “+2” from being parsed. */
 							let i = Int(s, radix: 10),
 							i >= 0, i <= UInt8.max
 						else {
@@ -603,9 +599,9 @@ public struct SGR : RawRepresentable, Hashable, CustomStringConvertible {
 					}
 					switch colorType {
 						case "2":
-							/* Wikipedia says empty values are treated as 0. But
-							 * Terminal for instance does not seem to know that. We
-							 * don’t care, we do like Wikipedia says. */
+							/* Wikipedia says empty values are treated as 0.
+							 * But Terminal for instance does not seem to know that.
+							 * We don’t care, we do like Wikipedia says. */
 							let r = try uint8(scanner.scanUpToString(String(Self.separatorChar)) ?? "0")
 							guard scanner.scanCharacter() == Self.separatorChar else {throw DummyError()}
 							let g = try uint8(scanner.scanUpToString(String(Self.separatorChar)) ?? "0")
@@ -784,13 +780,14 @@ public struct SGR : RawRepresentable, Hashable, CustomStringConvertible {
 			while let modifier = Modifier(scanner: contentScanner) {
 				modifiers.append(modifier)
 				guard !contentScanner.isAtEnd else {break}
-				/* A modifier has been parsed. Either scan location is now at a
-				 * semicolon or at the end. If on semicolon we must consume it. */
+				/* A modifier has been parsed.
+				 * Either scan location is now at a semicolon or at the end.
+				 * If on semicolon we must consume it. */
 				let c = contentScanner.scanCharacter()
 				assert(c == Modifier.separatorChar)
 			}
 			guard contentScanner.isAtEnd else {
-				/* Not all modifiers parsed in the content */
+				/* Not all modifiers parsed in the content. */
 				throw DummyError()
 			}
 		} catch {
@@ -804,7 +801,7 @@ public struct SGR : RawRepresentable, Hashable, CustomStringConvertible {
 	}
 	
 	private static let escapeChar = Character("\u{1B}")
-	private static let csiChar    = Character("[") /* An SGR is a CSI */
+	private static let csiChar    = Character("[") /* An SGR is a CSI. */
 	private static let sgrEndChar = Character("m")
 	
 	private static let possibleParameterBytes    = CharacterSet(charactersIn: Unicode.Scalar(0x30)...Unicode.Scalar(0x3F))
