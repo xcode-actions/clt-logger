@@ -18,7 +18,7 @@ let package = Package(
 	],
 	dependencies: {
 		var ret = [Package.Dependency]()
-		ret.append(.package(url: "https://github.com/apple/swift-log.git", from: "1.4.2"))
+		ret.append(.package(url: "https://github.com/apple/swift-log.git", from: "1.5.1"))
 #if !canImport(System)
 		ret.append(.package(url: "https://github.com/apple/swift-system.git", from: "1.0.0"))
 #endif
