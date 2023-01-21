@@ -35,7 +35,8 @@ final class CLTLoggerTests: XCTestCase {
 		
 		logger[metadataKey: "from"] = #"h\]m"#
 		logger.trace("with some metadata")
-		logger.notice("with some metadata", metadata: ["whats_wrong": #"Shit's on "fire", yo!"#])
+		logger.notice("with some metadata", metadata: ["whats_wrong": #"Shit got\#n"a new line", yo!"#])
+		logger.notice("with some metadata", metadata: ["whats_wrong": #"Shit’s on "fire", yo!"#])
 		logger.error("with some metadata", metadata: ["whats_wrong": ["the shit": #"it is on "fire", yo!"#, "bob?": "kelso"]])
 		logger.warning("with some metadata", metadata: ["whats_wrong": ["the shit", "it is on", #""fire""#, "yo!"]])
 		logger.critical("with some metadata", metadata: ["whats_wrong": ["the shit", "it is on", #""fire""#, "yo!"], "aaaaand": "we’re all dead"])
