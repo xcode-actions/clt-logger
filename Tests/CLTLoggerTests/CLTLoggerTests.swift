@@ -33,18 +33,18 @@ final class CLTLoggerTests: XCTestCase {
 		var logger = Logger(label: "my logger")
 		logger.logLevel = .trace
 		
-		logger[metadataKey: "from"] = "h\\]m"
+		logger[metadataKey: "from"] = #"h\]m"#
 		logger.trace("with some metadata")
-		logger.notice("with some metadata", metadata: ["whats_wrong": "Shit's on \"fire\", yo!"])
-		logger.error("with some metadata", metadata: ["whats_wrong": ["the shit": "it is on \"fire\", yo!", "bob?": "kelso"]])
-		logger.warning("with some metadata", metadata: ["whats_wrong": ["the shit", "it is on", "\"fire\"", "yo!"]])
-		logger.critical("with some metadata", metadata: ["whats_wrong": ["the shit", "it is on", "\"fire\"", "yo!"], "aaaaand": "we’re all dead"])
+		logger.notice("with some metadata", metadata: ["whats_wrong": #"Shit's on "fire", yo!"#])
+		logger.error("with some metadata", metadata: ["whats_wrong": ["the shit": #"it is on "fire", yo!"#, "bob?": "kelso"]])
+		logger.warning("with some metadata", metadata: ["whats_wrong": ["the shit", "it is on", #""fire""#, "yo!"]])
+		logger.critical("with some metadata", metadata: ["whats_wrong": ["the shit", "it is on", #""fire""#, "yo!"], "aaaaand": "we’re all dead"])
 		
 		logger[metadataKey: "from"] = nil
 		logger[metadataKey: "request_id"] = "42"
 		logger.warning("with some metadata")
 		logger.warning("with some metadata", metadata: ["service_id": "ldap"])
-		logger.warning("with some metadata", metadata: ["service_id": "ldap", "faulty_wires": ["d", "a", "oops, has\"a quote"]])
+		logger.warning("with some metadata", metadata: ["service_id": "ldap", "faulty_wires": ["d", "a", #"oops, has"a quote"#]])
 	}
 	
 	func testVisual2() {
