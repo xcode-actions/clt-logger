@@ -115,16 +115,16 @@ public struct CLTLogger : LogHandler {
 	}
 	
 	public var logLevel: Logger.Level = .info
-	/** **Not** thread-safe. */
 	public var metadata: Logger.Metadata = [:] {
 		didSet {flatMetadataCache = flatMetadataArray(metadata)}
 	}
+	public var metadataProvider: Logger.MetadataProvider?
 	
 	public let outputFileDescriptor: FileDescriptor
 	public let logPrefixesByLevel: [Logger.Level: (text: String, textContinuation: String, metadata: String)]
 	public let lineSeparator: String
 	
-	public init(fd: FileDescriptor = .standardError, logPrefixStyle: LogPrefixStyle = .auto, lineSeparator: String = "\n") {
+	public init(fd: FileDescriptor = .standardError, logPrefixStyle: LogPrefixStyle = .auto, lineSeparator: String = "\n", metadataProvider: Logger.MetadataProvider? = LoggingSystem.metadataProvider) {
 		let logPrefixStyle = (logPrefixStyle != .auto ? logPrefixStyle : (CLTLogger.shouldEnableColors(for: fd) ? .color : .emoji))
 		
 		let logPrefixesByLevel: [Logger.Level: (text: String, textContinuation: String, metadata: String)]
@@ -155,8 +155,8 @@ public struct CLTLogger : LogHandler {
 		let (textPrefix, textContinuationPrefix, metadataPrefix) = logPrefixesByLevel[level] ?? ("", "", "")
 		
 		let fma: [String]
-		if let m = logMetadata, !m.isEmpty {fma = flatMetadataArray(metadata.merging(m, uniquingKeysWith: { _, new in new }))}
-		else                               {fma = flatMetadataCache}
+		if let m = mergedMetadata(with: logMetadata) {fma = flatMetadataArray(m)}
+		else                                         {fma = flatMetadataCache}
 		
 		var fullString = (textPrefix + message.description.replacingOccurrences(of: "\n", with: lineSeparator + textContinuationPrefix, options: .literal) + lineSeparator)
 		for flatMeta in fma {
@@ -190,6 +190,27 @@ public struct CLTLogger : LogHandler {
 	private static var lock = NSLock()
 	
 	private var flatMetadataCache = [String]()
+	
+	/**
+	 Merge the logger’s metadata, the provider’s metadata and the given explicit metadata and return the new metadata.
+	 If the provider’s metadata and the explicit metadata are `nil`, returns `nil` to signify the current `flatMetadataCache` can be used. */
+	private func mergedMetadata(with explicit: Logger.Metadata?) -> Logger.Metadata? {
+		var metadata = metadata
+		let provided = metadataProvider?.get() ?? [:]
+		
+		guard !provided.isEmpty || !((explicit ?? [:]).isEmpty) else {
+			/* All per-log-statement values are empty or not set: we return nil. */
+			return nil
+		}
+		
+		if !provided.isEmpty {
+			metadata.merge(provided, uniquingKeysWith: { _, provided in provided })
+		}
+		if let explicit = explicit, !explicit.isEmpty {
+			metadata.merge(explicit, uniquingKeysWith: { _, explicit in explicit })
+		}
+		return metadata
+	}
 	
 	private func flatMetadataArray(_ metadata: Logger.Metadata) -> [String] {
 		return metadata.lazy.sorted{ $0.key < $1.key }.map{ keyVal in
