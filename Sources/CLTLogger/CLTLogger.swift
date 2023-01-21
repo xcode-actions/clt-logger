@@ -215,7 +215,7 @@ public struct CLTLogger : LogHandler {
 	private func flatMetadataArray(_ metadata: Logger.Metadata) -> [String] {
 		return metadata.lazy.sorted{ $0.key < $1.key }.map{ keyVal in
 			let (key, val) = keyVal
-			return key + ": " + prettyMetadataValue(val)
+			return key + ": " + prettyMetadataValue(val, isFromRoot: true)
 		}
 	}
 	
@@ -232,19 +232,19 @@ public struct CLTLogger : LogHandler {
 			else     {result += ", "}
 			debugPrint(k, terminator: "", to: &result)
 			result += ": "
-			debugPrint(prettyMetadataValue(v), terminator: "", to: &result)
+			debugPrint(prettyMetadataValue(v, isFromRoot: false), terminator: "", to: &result)
 		}
 		result += "]"
 		return result
 	}
 	
-	private func prettyMetadataValue(_ v: Logger.MetadataValue) -> String {
+	private func prettyMetadataValue(_ v: Logger.MetadataValue, isFromRoot: Bool) -> String {
 		/* We return basically v.description, but dictionary keys are sorted. */
 		switch v {
-			case .dictionary(let dict):     return flatMetadata(dict.mapValues{ Logger.MetadataValue.string(prettyMetadataValue($0)) })
-			case .array(let list):          return list.map{ prettyMetadataValue($0) }.description
-			case .string(let str):          return str
-			case .stringConvertible(let o): return o.description
+			case .string(let str):          return (!isFromRoot ? str : str.debugDescription)
+			case .stringConvertible(let o): return (!isFromRoot ? o.description : o.description.debugDescription)
+			case .array(let list):          return list.map{ prettyMetadataValue($0, isFromRoot: false) }.description
+			case .dictionary(let dict):     return flatMetadata(dict.mapValues{ Logger.MetadataValue.string(prettyMetadataValue($0, isFromRoot: false)) })
 		}
 	}
 	
