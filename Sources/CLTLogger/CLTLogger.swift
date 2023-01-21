@@ -40,12 +40,83 @@ import Logging
   or that the genericity the Adorkable logger introduces is not really needed (creating a log handler is not complex). */
 public struct CLTLogger : LogHandler {
 	
-	public static var defaultTextPrefixesByLogLevel: [Logger.Level: (text: String, textContinuation: String, metadata: String)] = {
-		func addMeta(_ str: String) -> (text: String, textContinuation: String, metadata: String) {
+	public enum Style {
+		case none
+		case text
+		case emoji
+		case color
+		
+		/** Choose text, emoji or color automatically depending on context. */
+		case auto
+	}
+	
+	/**
+	 How multilines logs should be handled.
+	 
+	 This has an impact on the log message and the placement of the metadata.
+	 Newlines in the metadata themselves are always replaced by \n (and other special characters are escaped too). */
+	public enum MultilineMode {
+		/**
+		 The new lines in logs are replaced by the given value, the metadata are printed on the same line as the log.
+		 
+		 This multiline log handling guarantees there will be exactly one line per log. */
+		case disallowMultiline(newlinesReplacement: String)
+		/**
+		 The new lines in logs are replaced by the given value, the metadata are all printed on one line after the log.
+		 
+		 This multiline log handling guarantees there will be exactly two lines per log. */
+		case disallowMultilineButMetadataOnOneNewLine(newlinesReplacement: String)
+		/**
+		 The new lines in logs are replaced by the given value, the metadata are all printed after the log, one line per metadata.
+		 
+		 This multiline log handling guarantees there will be exactly n+1 lines per log, where n is the metadata count. */
+		case disallowMultilineButMetadataOnNewLines(newlinesReplacement: String)
+		/**
+		 Multiline logs are allowed.
+		 The metadata are printed on the same line as the log, _unless_ the log is multiline,
+		 in which case there are printed after, one line per metadata.
+		 There is no option to have all the metadata on one line only if the log is multiline. */
+		case allowMultilineWithMetadataOneSameLineUnlessMultiLineLogs
+		/** Multiline logs are allowed and logs are printed after the log, one line per metadata. */
+		case allMultiline
+		
+		public static let `default` = Self.allowMultilineWithMetadataOneSameLineUnlessMultiLineLogs
+	}
+	
+	public struct Constants : Sendable {
+		
+		public var logPrefix: String
+		public var multilineLogPrefix: String
+		public var metadataLinePrefix: String
+		public var metadataSeparator: String
+		public var logAndMetadataSeparator: String
+		
+		public init() {
+			self.init(logPrefix: "", multilineLogPrefix: "", metadataLinePrefix: "meta: ", metadataSeparator: ", ", logAndMetadataSeparator: " - meta: ")
+		}
+		
+		public init(logPrefix: String, multilineLogPrefix: String, metadataLinePrefix: String, metadataSeparator: String, logAndMetadataSeparator: String) {
+			self.logPrefix = logPrefix
+			self.multilineLogPrefix = multilineLogPrefix
+			self.metadataLinePrefix = metadataLinePrefix
+			self.metadataSeparator = metadataSeparator
+			self.logAndMetadataSeparator = logAndMetadataSeparator
+		}
+		
+	}
+	
+	public static var defaultConstantsByLogLevelForText: [Logger.Level: Constants] = {
+		func addMeta(_ str: String) -> Constants {
 			let len1 = str.count - 2
 			let len2 = str.trimmingCharacters(in: .init(charactersIn: "[ ]")).count
 			let spaces = String(repeating: " ", count: (len1 - len2)/2)
-			return (str + " ", "[" + spaces + String(repeating: "+", count: len2) + spaces + "] ", "    meta  - ")
+			return .init(
+				logPrefix: str + " ",
+				multilineLogPrefix: "[" + spaces + String(repeating: "+", count: len2) + spaces + "] ",
+				metadataLinePrefix: "    meta  - ",
+				metadataSeparator: ", ",
+				logAndMetadataSeparator: "  --- meta: "
+			)
 		}
 		return [
 			.trace:    addMeta("[   TRC   ]"),
@@ -58,8 +129,8 @@ public struct CLTLogger : LogHandler {
 		]
 	}()
 	
-	public static var defaultEmojiPrefixesByLogLevel: [Logger.Level: (text: String, textContinuation: String, metadata: String)] = {
-		func addMeta(_ str: String, _ padding: String) -> (text: String, textContinuation: String, metadata: String) {
+	public static var defaultConstantsByLogLevelForEmoji: [Logger.Level: Constants] = {
+		func addMeta(_ str: String, _ padding: String) -> Constants {
 			let linkPadding: String
 #if TERMINAL_EMOJI
 			let str = str + padding
@@ -67,7 +138,13 @@ public struct CLTLogger : LogHandler {
 #else
 			linkPadding = ""
 #endif
-			return ("" + str + " • ", "" + str + " ◦ ", "" + str + "   ⛓ " + linkPadding)
+			return .init(
+				logPrefix: str + " ",
+				multilineLogPrefix: str + " ◦ ",
+				metadataLinePrefix: str + " ⛓ " + linkPadding,
+				metadataSeparator: " - ",
+				logAndMetadataSeparator: " -- "
+			)
 		}
 		/* The padding correct alignment issues. */
 		return [
@@ -82,14 +159,16 @@ public struct CLTLogger : LogHandler {
 	}()
 	
 	/* Terminal does not support RGB colors, so we use 255-color palette. */
-	public static var defaultColorPrefixesByLogLevel: [Logger.Level: (text: String, textContinuation: String, metadata: String)] = {
-		func str(_ spaces: String, _ str: String, _ mods1: [SGR.Modifier], _ mods2: [SGR.Modifier]) -> (text: String, textContinuation: String, metadata: String) {
+	public static var defaultConstantsByLogLevelForColors: [Logger.Level: Constants] = {
+		func str(_ spaces: String, _ str: String, _ mods1: [SGR.Modifier], _ mods2: [SGR.Modifier]) -> Constants {
 			let bgColor = SGR.Modifier.reset
 			let fgColor = SGR.Modifier.fgColorTo4BitBrightBlack
-			return (
-				SGR(.reset, bgColor, fgColor).rawValue + "[" + spaces + SGR(mods1).rawValue + str + SGR(.reset, bgColor, fgColor).rawValue + "]" + SGR.reset.rawValue + " " + SGR(mods2).rawValue,
-				SGR(.reset, bgColor, fgColor).rawValue + "[" + spaces + SGR(mods1).rawValue + String(repeating: "+", count: str.count) + SGR(.reset, bgColor, fgColor).rawValue + "]" + SGR.reset.rawValue + " " + SGR(mods2).rawValue,
-				"  " + SGR(.fgColorTo4BitWhite).rawValue + "meta:" + SGR.reset.rawValue + " " + SGR(.fgColorTo256PaletteValue(245)).rawValue
+			return .init(
+				logPrefix: SGR(.reset, bgColor, fgColor).rawValue + "[" + spaces + SGR(mods1).rawValue + str + SGR(.reset, bgColor, fgColor).rawValue + "]" + SGR.reset.rawValue + " " + SGR(mods2).rawValue,
+				multilineLogPrefix: SGR(.reset, bgColor, fgColor).rawValue + "[" + spaces + SGR(mods1).rawValue + String(repeating: "+", count: str.count) + SGR(.reset, bgColor, fgColor).rawValue + "]" + SGR.reset.rawValue + " " + SGR(mods2).rawValue,
+				metadataLinePrefix: "  " + SGR(.fgColorTo4BitWhite).rawValue + "meta:" + SGR.reset.rawValue + " " + SGR(.fgColorTo256PaletteValue(245)).rawValue,
+				metadataSeparator: SGR.reset.rawValue + " " + SGR(.fgColorTo4BitWhite).rawValue + "-" + SGR.reset.rawValue + " " + SGR(.fgColorTo256PaletteValue(245)).rawValue,
+				logAndMetadataSeparator: SGR(.reset).rawValue + " " + SGR(.fgColorTo4BitWhite).rawValue + "--" + SGR.reset.rawValue + " " + SGR(.fgColorTo256PaletteValue(245)).rawValue
 			)
 		}
 		
@@ -104,46 +183,41 @@ public struct CLTLogger : LogHandler {
 		]
 	}()
 	
-	public enum LogPrefixStyle {
-		case none
-		case text
-		case emoji
-		case color
-		
-		/** Choose text, emoji or color automatically depending on context. */
-		case auto
-	}
-	
 	public var logLevel: Logger.Level = .info
+	
 	public var metadata: Logger.Metadata = [:] {
 		didSet {flatMetadataCache = flatMetadataArray(metadata)}
 	}
 	public var metadataProvider: Logger.MetadataProvider?
 	
 	public let outputFileDescriptor: FileDescriptor
-	public let logPrefixesByLevel: [Logger.Level: (text: String, textContinuation: String, metadata: String)]
+	public let multilineMode: MultilineMode
+	public let constantsByLevel: [Logger.Level: Constants]
 	public let lineSeparator: String
 	
-	public init(fd: FileDescriptor = .standardError, logPrefixStyle: LogPrefixStyle = .auto, lineSeparator: String = "\n", metadataProvider: Logger.MetadataProvider? = LoggingSystem.metadataProvider) {
-		let logPrefixStyle = (logPrefixStyle != .auto ? logPrefixStyle : (CLTLogger.shouldEnableColors(for: fd) ? .color : .emoji))
+	public init(fd: FileDescriptor = .standardError, multilineMode: MultilineMode = .default, logStyle: Style = .auto, lineSeparator: String = "\n", metadataProvider: Logger.MetadataProvider? = LoggingSystem.metadataProvider) {
+		let logPrefixStyle = (logStyle != .auto ? logStyle : (CLTLogger.shouldEnableColors(for: fd) ? .color : .emoji))
 		
-		let logPrefixesByLevel: [Logger.Level: (text: String, textContinuation: String, metadata: String)]
+		let constantsByLevel: [Logger.Level: Constants]
 		switch logPrefixStyle {
-			case .none:  logPrefixesByLevel = [:]
-			case .text:  logPrefixesByLevel = CLTLogger.defaultTextPrefixesByLogLevel
-			case .emoji: logPrefixesByLevel = CLTLogger.defaultEmojiPrefixesByLogLevel
-			case .color: logPrefixesByLevel = CLTLogger.defaultColorPrefixesByLogLevel
+			case .none:  constantsByLevel = [:]
+			case .text:  constantsByLevel = CLTLogger.defaultConstantsByLogLevelForText
+			case .emoji: constantsByLevel = CLTLogger.defaultConstantsByLogLevelForEmoji
+			case .color: constantsByLevel = CLTLogger.defaultConstantsByLogLevelForColors
 			case .auto: fatalError()
 		}
 		let lineSeparator = (logPrefixStyle == .color ? SGR.reset.rawValue : "") + lineSeparator
 		
-		self.init(fd: fd, logPrefixesByLevel: logPrefixesByLevel, lineSeparator: lineSeparator)
+		self.init(fd: fd, multilineMode: multilineMode, constantsByLevel: constantsByLevel, lineSeparator: lineSeparator, metadataProvider: metadataProvider)
 	}
 	
-	public init(fd: FileDescriptor = .standardError, logPrefixesByLevel: [Logger.Level: (text: String, textContinuation: String, metadata: String)], lineSeparator: String = "\n") {
+	public init(fd: FileDescriptor = .standardError, multilineMode: MultilineMode = .default, constantsByLevel: [Logger.Level: Constants], lineSeparator: String = "\n", metadataProvider: Logger.MetadataProvider? = LoggingSystem.metadataProvider) {
 		self.outputFileDescriptor = fd
-		self.logPrefixesByLevel = logPrefixesByLevel
+		self.multilineMode = multilineMode
+		self.constantsByLevel = constantsByLevel
 		self.lineSeparator = lineSeparator
+		
+		self.metadataProvider = metadataProvider
 	}
 	
 	public subscript(metadataKey metadataKey: String) -> Logger.Metadata.Value? {
@@ -152,28 +226,23 @@ public struct CLTLogger : LogHandler {
 	}
 	
 	public func log(level: Logger.Level, message: Logger.Message, metadata logMetadata: Logger.Metadata?, source: String, file: String, function: String, line: UInt) {
-		let (textPrefix, textContinuationPrefix, metadataPrefix) = logPrefixesByLevel[level] ?? ("", "", "")
+		let constants = constantsByLevel[level] ?? .init()
 		
-		let fma: [String]
-		if let m = mergedMetadata(with: logMetadata) {fma = flatMetadataArray(m)}
-		else                                         {fma = flatMetadataCache}
+		let effectiveFlatMetadata: [String]
+		if let m = mergedMetadata(with: logMetadata) {effectiveFlatMetadata = flatMetadataArray(m)}
+		else                                         {effectiveFlatMetadata = flatMetadataCache}
 		
-		var fullString = (textPrefix + message.description.replacingOccurrences(of: "\n", with: lineSeparator + textContinuationPrefix, options: .literal) + lineSeparator)
-		for flatMeta in fma {
-			fullString.append(metadataPrefix + flatMeta + lineSeparator)
-		}
-		let data = Data(fullString.utf8)
+		/* We compute the data to print outside of the lock. */
+		let data = format(message: message.description, flatMetadata: effectiveFlatMetadata, constants: constants)
 		
 		/* We lock, because the writeAll function might split the write in more than 1 write
 		 *  (if the write system call only writes a part of the data).
-		 * If another part of the program writes to fd, we might get interleaved data, because they cannot be aware of our lock
-		 *  (and we cannot be aware of theirs if they have one). */
-		CLTLogger.lock.lock()
-		
-		/* Is there a better idea than silently drop the message in case of fail? */
-		_ = try? outputFileDescriptor.writeAll(data)
-		
-		CLTLogger.lock.unlock()
+		 * If another part of the program writes to fd, we might get interleaved data,
+		 *  because they cannot be aware of our lock (and we cannot be aware of theirs if they have one). */
+		CLTLogger.lock.withLock{
+			/* Is there a better idea than silently drop the message in case of fail? */
+			_ = try? outputFileDescriptor.writeAll(data)
+		}
 	}
 	
 	private static func shouldEnableColors(for fd: FileDescriptor) -> Bool {
@@ -190,6 +259,69 @@ public struct CLTLogger : LogHandler {
 	private static var lock = NSLock()
 	
 	private var flatMetadataCache = [String]()
+	
+}
+
+
+/* Formatting of the log with flat metadata. */
+extension CLTLogger {
+	
+	func format(message: String, flatMetadata: [String], constants: Constants) -> Data {
+		switch multilineMode {
+			case .disallowMultiline(newlinesReplacement: let r):
+				var message = constants.logPrefix + message.replacingNewlines(with: r).string
+				if !flatMetadata.isEmpty {
+					message += constants.logAndMetadataSeparator
+				}
+				message += flatMetadata.joined(separator: constants.metadataSeparator)
+				message += lineSeparator
+				return Data(message.utf8)
+				
+			case .disallowMultilineButMetadataOnOneNewLine(newlinesReplacement: let r):
+				var message = constants.logPrefix + message.replacingNewlines(with: r).string
+				if !flatMetadata.isEmpty {
+					message += lineSeparator + constants.metadataLinePrefix
+				}
+				message += flatMetadata.joined(separator: constants.metadataSeparator)
+				message += lineSeparator
+				return Data(message.utf8)
+				
+			case .disallowMultilineButMetadataOnNewLines(newlinesReplacement: let r):
+				var message = constants.logPrefix + message.replacingNewlines(with: r).string
+				message += flatMetadata.map{ lineSeparator + constants.metadataLinePrefix + $0 }.joined()
+				message += lineSeparator
+				return Data(message.utf8)
+				
+			case .allowMultilineWithMetadataOneSameLineUnlessMultiLineLogs:
+				let (tweakedMessage, hasTweaked) = message.replacingNewlines(with: lineSeparator + constants.multilineLogPrefix)
+				var message = constants.logPrefix + tweakedMessage
+				if hasTweaked {
+					/* We’re on a multiline case. */
+					message += flatMetadata.map{ lineSeparator + constants.metadataLinePrefix + $0 }.joined()
+					message += lineSeparator
+				} else {
+					/* We’re on a single line case. */
+					if !flatMetadata.isEmpty {
+						message += constants.logAndMetadataSeparator
+					}
+					message += flatMetadata.joined(separator: constants.metadataSeparator)
+					message += lineSeparator
+				}
+				return Data(message.utf8)
+				
+			case .allMultiline:
+				var message = constants.logPrefix + message.replacingNewlines(with: lineSeparator + constants.multilineLogPrefix).string
+				message += flatMetadata.map{ lineSeparator + constants.metadataLinePrefix + $0 }.joined()
+				message += lineSeparator
+				return Data(message.utf8)
+		}
+	}
+	
+}
+
+
+/* Metadata handling. */
+extension CLTLogger {
 	
 	/**
 	 Merge the logger’s metadata, the provider’s metadata and the given explicit metadata and return the new metadata.
