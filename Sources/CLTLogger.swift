@@ -27,7 +27,8 @@ import Logging
  + As this logger is specially dedicated to CLT programs, the text it outputs is as small as possible on purpose:
   only the message is displayed, w/ a potential prefix indicating the log level (or a color if colors are allowed).
  
- - Note: An interesting logger is `Adorkable/swift-log-format-and-pipe`.
+ #### Note
+ An interesting logger is `Adorkable/swift-log-format-and-pipe`.
  I almost used it (by creating extensions for a clt format and co), but ultimately dismissed it because:
  + Despite its name (which contains formatter), you are not free to choose the log format:
   every message is ended w/ a `\n` (the LoggerTextOutputStreamPipe adds the new-line directly).
@@ -73,9 +74,11 @@ public struct CLTLogger : LogHandler {
 		case disallowMultilineButMetadataOnNewLines(newlinesReplacement: String)
 		/**
 		 Multiline logs are allowed.
+		 
 		 The metadata are printed on the same line as the log, _unless_ the log is multiline,
-		 in which case there are printed after, one line per metadata.
-		 There is no option to have all the metadata on one line only if the log is multiline. */
+		  in which case there are printed after, one line per metadata.
+		 
+		 There are no options to have all the metadata on one line only if the log is multiline. */
 		case allowMultilineWithMetadataOneSameLineUnlessMultiLineLogs
 		/** Multiline logs are allowed and logs are printed after the log, one line per metadata. */
 		case allMultiline
@@ -271,7 +274,7 @@ public struct CLTLogger : LogHandler {
 	}
 	
 	/* Do _not_ use os_unfair_lock, apparently it is bad in Swift:
-	 *  https://twitter.com/grynspan/status/1392080373752995849 */
+	 *  <https://twitter.com/grynspan/status/1392080373752995849>. */
 	private static var lock = NSLock()
 	
 	private var flatMetadataCache = [String]()
@@ -372,7 +375,7 @@ extension CLTLogger {
 		
 		/* Basically we’ll return "\(metadata) ", but keys will be sorted.
 		 * Most of the implem was stolen from Swift source code:
-		 *    https://github.com/apple/swift/blob/swift-5.3.3-RELEASE/stdlib/public/core/Dictionary.swift#L1681 */
+		 *  <https://github.com/apple/swift/blob/swift-5.3.3-RELEASE/stdlib/public/core/Dictionary.swift#L1681>. */
 		var result = "["
 		var first = true
 		for (k, v) in metadata.lazy.sorted(by: { $0.key < $1.key }) {
