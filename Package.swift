@@ -2,9 +2,6 @@
 import PackageDescription
 
 
-/* Swift conditional compilation flags:
- *   - TERMINAL_EMOJI: Correct emoji alignment for Terminal.app */
-
 let package = Package(
 	name: "clt-logger",
 	platforms: [
@@ -32,7 +29,7 @@ let package = Package(
 			ret.append(.product(name: "SystemPackage", package: "swift-system"))
 #endif
 			return ret
-		}()),
-		.testTarget(name: "CLTLoggerTests", dependencies: ["CLTLogger"])
+		}(), path: "Sources"),
+		.testTarget(name: "CLTLoggerTests", dependencies: ["CLTLogger"], path: "Tests")
 	]
 )
