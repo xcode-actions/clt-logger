@@ -131,17 +131,14 @@ public struct CLTLogger : LogHandler {
 	
 	public static var defaultConstantsByLogLevelForEmoji: [Logger.Level: Constants] = {
 		func addMeta(_ str: String, _ padding: String) -> Constants {
-			let linkPadding: String
-#if TERMINAL_EMOJI
-			let str = str + padding
-			linkPadding = " "
-#else
-			linkPadding = ""
-#endif
+			var str = str
+			if let f = getenv("CLTLOGGER_TERMINAL_EMOJI"), String(cString: f) != "NO" {
+				str = str + padding
+			}
 			return .init(
-				logPrefix: str + " ",
-				multilineLogPrefix: str + " ◦ ",
-				metadataLinePrefix: str + " ⛓ " + linkPadding,
+				logPrefix: str + " → ",
+				multilineLogPrefix: str + "   ",
+				metadataLinePrefix: str + " ▷▷ ",
 				metadataSeparator: " - ",
 				logAndMetadataSeparator: " -- "
 			)
