@@ -132,9 +132,17 @@ public struct CLTLogger : LogHandler {
 	public static var defaultConstantsByLogLevelForEmoji: [Logger.Level: Constants] = {
 		func addMeta(_ str: String, _ padding: String) -> Constants {
 			var str = str
+#if Xcode
 			if let f = getenv("CLTLOGGER_TERMINAL_EMOJI"), String(cString: f) != "NO" {
 				str = str + padding
 			}
+#else
+			if let f = getenv("CLTLOGGER_TERMINAL_EMOJI"), String(cString: f) == "NO" {
+				/*nop*/
+			} else {
+				str = str + padding
+			}
+#endif
 			return .init(
 				logPrefix: str + " → ",
 				multilineLogPrefix: str + "   ",
@@ -193,7 +201,7 @@ public struct CLTLogger : LogHandler {
 	public let lineSeparator: String
 	
 	public init(fd: FileDescriptor = .standardError, multilineMode: MultilineMode = .default, logStyle: Style = .auto, lineSeparator: String = "\n", metadataProvider: Logger.MetadataProvider? = LoggingSystem.metadataProvider) {
-		let logPrefixStyle = (logStyle != .auto ? logStyle : (CLTLogger.shouldEnableColors(for: fd) ? .color : .emoji))
+		let logPrefixStyle = (logStyle != .auto ? logStyle : CLTLogger.autoLogStyle(with: fd))
 		
 		let constantsByLevel: [Logger.Level: Constants]
 		switch logPrefixStyle {
@@ -242,12 +250,23 @@ public struct CLTLogger : LogHandler {
 		}
 	}
 	
-	private static func shouldEnableColors(for fd: FileDescriptor) -> Bool {
+	private static func autoLogStyle(with fd: FileDescriptor) -> Style {
+		if let s = getenv("CLTLOGGER_LOG_STYLE") {
+			switch String(cString: s) {
+				case "none":  return .none
+				case "color": return .color
+				case "emoji": return .emoji
+				case "text":  return .text
+				default: (/*nop*/)
+			}
+		}
 #if Xcode
 		/* Xcode runs program in a tty, but does not support colors. */
-		return false
+		return .emoji
 #else
-		return isatty(fd.rawValue) != 0
+		/* TODO: We should check whether the tty actually supports colors.
+		 * Hint: `tput colors` is able to return the numbers of colors supported in the terminal. How does it do it? */
+		return (isatty(fd.rawValue) != 0) ? .color : .emoji
 #endif
 	}
 	
