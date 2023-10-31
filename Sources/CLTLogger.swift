@@ -111,24 +111,24 @@ public struct CLTLogger : LogHandler {
 	public static var defaultConstantsByLogLevelForText: [Logger.Level: Constants] = {
 		func addMeta(_ str: String) -> Constants {
 			let len1 = str.count - 2
-			let len2 = str.trimmingCharacters(in: .init(charactersIn: "[ ]")).count
-			let spaces = String(repeating: " ", count: (len1 - len2)/2)
+			let len2 = str.trimmingCharacters(in: .init(charactersIn: "[]*")).count
+			let stars = String(repeating: "*", count: len1 - len2)
 			return .init(
 				logPrefix: str + " ",
-				multilineLogPrefix: "[" + spaces + String(repeating: "+", count: len2) + spaces + "] ",
-				metadataLinePrefix: "    meta  - ",
+				multilineLogPrefix: "[" + String(repeating: "+", count: len2) + "]" + stars + " ",
+				metadataLinePrefix: " meta" + stars + " - ",
 				metadataSeparator: ", ",
-				logAndMetadataSeparator: "  --- meta: "
+				logAndMetadataSeparator: " --- meta: "
 			)
 		}
 		return [
-			.trace:    addMeta("[   TRC   ]"),
-			.debug:    addMeta("[   DBG   ]"),
-			.info:     addMeta("[   NFO   ]"),
-			.notice:   addMeta("[   NTC   ]"),
-			.warning:  addMeta("[   WRN   ]"),
-			.error:    addMeta("[  *ERR*  ]"),
-			.critical: addMeta("[ **CRT** ]")
+			.trace:    addMeta("[TRC]"),
+			.debug:    addMeta("[DBG]"),
+			.info:     addMeta("[NFO]"),
+			.notice:   addMeta("[NTC]"),
+			.warning:  addMeta("[WRN]"),
+			.error:    addMeta("[ERR]*"),
+			.critical: addMeta("[CRT]**")
 		]
 	}()
 	
