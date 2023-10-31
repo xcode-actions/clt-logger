@@ -38,6 +38,7 @@ final class CLTLoggerTests: XCTestCase {
 		logger.notice("with some metadata", metadata: ["whats_wrong": #"Shit’s got \#(SGR(.fgColorTo4BitRed).rawValue)"some colors", yo!"#])
 		logger.notice("with some metadata", metadata: ["whats_wrong": #"Shit’s got\#n"a new line", yo!"#])
 		logger.notice("with some metadata", metadata: ["whats_wrong": #"Shit’s got\#r"a sneaky new line", yo!"#])
+		logger.notice("with some metadata", metadata: ["whats_wrong": #"Shit’s got\#u{2028}an utf8 new line", yo!"#])
 		logger.notice("with some metadata", metadata: ["whats_wrong": #"Shit’s on "fire", yo!"#])
 		logger.error("with some metadata", metadata: ["whats_wrong": ["the shit": #"it is on "fire", yo!"#, "bob?": "kelso"]])
 		logger.warning("with some metadata", metadata: ["whats_wrong": ["the shit", "it is on", #""fire""#, "yo!"]])
@@ -77,6 +78,7 @@ final class CLTLoggerTests: XCTestCase {
 		logger.warning("Another multiline\nhere is the second line")
 		logger.error("Another multiline\nhere is the second line")
 		logger.error("A sneaky multiline\rhere is the second line")
+		logger.error("An utf8 multiline\u{0085}here is the second line")
 		logger.critical("YAM!\nhere is the second line\nand why not a third one", metadata: ["with": ["metadata", "again"], "because": "42"])
 	}
 	

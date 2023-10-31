@@ -5,13 +5,32 @@ import Foundation
 /* From <https://gist.github.com/joshavant/d9a94373ec45a7b5d7e7d98263e46e1e>. */
 extension String {
 	
-	func replaceCharactersFromSet(characterSet: CharacterSet, replacementString: String = "") -> (string: String, hasReplaced: Bool) {
-		let c = components(separatedBy: characterSet)
-		return (c.joined(separator: replacementString), c.count > 1)
+	enum NewLineProcessing {
+		
+		case none
+		case escapeAsASCII
+		case replace(replacement: String)
+		
 	}
 	
-	func replacingNewlines(with str: String) -> (string: String, hasReplaced: Bool) {
-		return replaceCharactersFromSet(characterSet: .newlines, replacementString: str)
+	/* Note: hasProcessedNewLines will return true when a new line is encountered even if the processing is to do nothing. */
+	func processForLogging(fullASCII: Bool = false, newLineProcessing: NewLineProcessing) -> (string: String, hasProcessedNewLines: Bool) {
+		var hasProcessedNewLines = false
+		let ascii = unicodeScalars.lazy.map{ scalar in
+			if Self.newLines.contains(scalar) {
+				hasProcessedNewLines = true
+				switch newLineProcessing {
+					case .none:           return String(scalar)
+					case .escapeAsASCII:  return scalar.escaped(asASCII: true)
+					case .replace(let r): return r
+				}
+			} else {
+				return scalar.escaped(asASCII: fullASCII)
+			}
+		}
+		return (ascii.joined(separator: ""), hasProcessedNewLines)
 	}
+	
+	private static let newLines = CharacterSet.newlines
 	
 }

@@ -26,6 +26,9 @@ import Logging
  By default, new lines are added.
  + As this logger is specially dedicated to CLT programs, the text it outputs is as small as possible on purpose:
   only the message is displayed, w/ a potential prefix indicating the log level (or a color if colors are allowed).
+ + All the messages given to this logger are escaped using `scalar.escaped(asASCII: false)`,
+  and the metadata keys and values are escaped using `scalar.escaped(asASCII: true)`.
+ 
  
  #### Note
  An interesting logger is `Adorkable/swift-log-format-and-pipe`.
@@ -38,7 +41,7 @@ import Logging
  + Overall I love the idea of the project, but I’m not fond of the realization.
  It is a feeling; I’m not sure of the reasons behind it.
  Might be related to the fact that we cannot use the project as-is,
-  or that the genericity the Adorkable logger introduces is not really needed (creating a log handler is not complex). */
+  or that the genericity the Adorkable logger introduces is not really needed (creating a log handler is not that complex). */
 public struct CLTLogger : LogHandler {
 	
 	public enum Style {
@@ -55,23 +58,25 @@ public struct CLTLogger : LogHandler {
 	 How multilines logs should be handled.
 	 
 	 This has an impact on the log message and the placement of the metadata.
-	 Newlines in the metadata themselves are always replaced by \n (and other special characters are escaped too). */
+	 Newlines in the metadata themselves are always replaced by \n (and other special characters are escaped too).
+	 
+	 For now there is no option to allow multilines metadata. */
 	public enum MultilineMode {
 		/**
 		 The new lines in logs are replaced by the given value, the metadata are printed on the same line as the log.
 		 
 		 This multiline log handling guarantees there will be exactly one line per log. */
-		case disallowMultiline(newlinesReplacement: String)
+		case disallowMultiline
 		/**
 		 The new lines in logs are replaced by the given value, the metadata are all printed on one line after the log.
 		 
 		 This multiline log handling guarantees there will be exactly two lines per log. */
-		case disallowMultilineButMetadataOnOneNewLine(newlinesReplacement: String)
+		case disallowMultilineButMetadataOnOneNewLine
 		/**
 		 The new lines in logs are replaced by the given value, the metadata are all printed after the log, one line per metadata.
 		 
 		 This multiline log handling guarantees there will be exactly n+1 lines per log, where n is the metadata count. */
-		case disallowMultilineButMetadataOnNewLines(newlinesReplacement: String)
+		case disallowMultilineButMetadataOnNewLines
 		/**
 		 Multiline logs are allowed.
 		 
@@ -285,10 +290,11 @@ public struct CLTLogger : LogHandler {
 /* Formatting of the log with flat metadata. */
 extension CLTLogger {
 	
+	/* The flatMetadata array should only contain Strings that contain only one line. */
 	func format(message: String, flatMetadata: [String], constants: Constants) -> Data {
 		switch multilineMode {
-			case .disallowMultiline(newlinesReplacement: let r):
-				var message = constants.logPrefix + message.replacingNewlines(with: r).string
+			case .disallowMultiline:
+				var message = constants.logPrefix + message.processForLogging(newLineProcessing: .escapeAsASCII).string
 				if !flatMetadata.isEmpty {
 					message += constants.logAndMetadataSeparator
 				}
@@ -296,8 +302,8 @@ extension CLTLogger {
 				message += lineSeparator
 				return Data(message.utf8)
 				
-			case .disallowMultilineButMetadataOnOneNewLine(newlinesReplacement: let r):
-				var message = constants.logPrefix + message.replacingNewlines(with: r).string
+			case .disallowMultilineButMetadataOnOneNewLine:
+				var message = constants.logPrefix + message.processForLogging(newLineProcessing: .escapeAsASCII).string
 				if !flatMetadata.isEmpty {
 					message += lineSeparator + constants.metadataLinePrefix
 				}
@@ -305,14 +311,14 @@ extension CLTLogger {
 				message += lineSeparator
 				return Data(message.utf8)
 				
-			case .disallowMultilineButMetadataOnNewLines(newlinesReplacement: let r):
-				var message = constants.logPrefix + message.replacingNewlines(with: r).string
+			case .disallowMultilineButMetadataOnNewLines:
+				var message = constants.logPrefix + message.processForLogging(newLineProcessing: .escapeAsASCII).string
 				message += flatMetadata.map{ lineSeparator + constants.metadataLinePrefix + $0 }.joined()
 				message += lineSeparator
 				return Data(message.utf8)
 				
 			case .allowMultilineWithMetadataOneSameLineUnlessMultiLineLogs:
-				let (tweakedMessage, hasTweaked) = message.replacingNewlines(with: lineSeparator + constants.multilineLogPrefix)
+				let (tweakedMessage, hasTweaked) = message.processForLogging(newLineProcessing: .replace(replacement: lineSeparator + constants.multilineLogPrefix))
 				var message = constants.logPrefix + tweakedMessage
 				if hasTweaked {
 					/* We’re on a multiline case. */
@@ -329,7 +335,7 @@ extension CLTLogger {
 				return Data(message.utf8)
 				
 			case .allMultiline:
-				var message = constants.logPrefix + message.replacingNewlines(with: lineSeparator + constants.multilineLogPrefix).string
+				var message = constants.logPrefix + message.processForLogging(newLineProcessing: .replace(replacement: lineSeparator + constants.multilineLogPrefix)).string
 				message += flatMetadata.map{ lineSeparator + constants.metadataLinePrefix + $0 }.joined()
 				message += lineSeparator
 				return Data(message.utf8)
@@ -366,36 +372,21 @@ extension CLTLogger {
 	private func flatMetadataArray(_ metadata: Logger.Metadata) -> [String] {
 		return metadata.lazy.sorted{ $0.key < $1.key }.map{ keyVal in
 			let (key, val) = keyVal
-			return key + ": " + prettyMetadataValue(val, isFromRoot: true)
+			return (
+				key.processForLogging(fullASCII: true, newLineProcessing: .escapeAsASCII).string +
+				": " +
+				prettyMetadataValue(val, isFromRoot: true)
+			)
 		}
-	}
-	
-	private func flatMetadata(_ metadata: Logger.Metadata) -> String {
-		guard !metadata.isEmpty else {return "[:]"}
-		
-		/* Basically we’ll return "\(metadata) ", but keys will be sorted.
-		 * Most of the implem was stolen from Swift source code:
-		 *  <https://github.com/apple/swift/blob/swift-5.3.3-RELEASE/stdlib/public/core/Dictionary.swift#L1681>. */
-		var result = "["
-		var first = true
-		for (k, v) in metadata.lazy.sorted(by: { $0.key < $1.key }) {
-			if first {first = false}
-			else     {result += ", "}
-			debugPrint(k, terminator: "", to: &result)
-			result += ": "
-			debugPrint(prettyMetadataValue(v, isFromRoot: false), terminator: "", to: &result)
-		}
-		result += "]"
-		return result
 	}
 	
 	private func prettyMetadataValue(_ v: Logger.MetadataValue, isFromRoot: Bool) -> String {
 		/* We return basically v.description, but dictionary keys are sorted. */
-		switch v {
-			case .string(let str):          return (!isFromRoot ? str : str.debugDescription)
-			case .stringConvertible(let o): return (!isFromRoot ? o.description : o.description.debugDescription)
-			case .array(let list):          return list.map{ prettyMetadataValue($0, isFromRoot: false) }.description
-			case .dictionary(let dict):     return flatMetadata(dict.mapValues{ Logger.MetadataValue.string(prettyMetadataValue($0, isFromRoot: false)) })
+		return switch v {
+			case .string(let str):      "\"" + str.processForLogging(fullASCII: true, newLineProcessing: .escapeAsASCII).string + "\""
+			case .array(let array):     "["  + array.map{ prettyMetadataValue($0, isFromRoot: false) }.joined(separator: ", ")  + "]"
+			case .dictionary(let dict): "["  + flatMetadataArray(dict).joined(separator: ", ")                                  + "]"
+			case .stringConvertible(let c): prettyMetadataValue(.string(c.description), isFromRoot: isFromRoot)
 		}
 	}
 	
