@@ -375,18 +375,18 @@ extension CLTLogger {
 			return (
 				key.processForLogging(fullASCII: true, newLineProcessing: .escapeAsASCII).string +
 				": " +
-				prettyMetadataValue(val, isFromRoot: true)
+				prettyMetadataValue(val)
 			)
 		}
 	}
 	
-	private func prettyMetadataValue(_ v: Logger.MetadataValue, isFromRoot: Bool) -> String {
+	private func prettyMetadataValue(_ v: Logger.MetadataValue) -> String {
 		/* We return basically v.description, but dictionary keys are sorted. */
 		return switch v {
-			case .string(let str):      "\"" + str.processForLogging(fullASCII: true, newLineProcessing: .escapeAsASCII).string + "\""
-			case .array(let array):     "["  + array.map{ prettyMetadataValue($0, isFromRoot: false) }.joined(separator: ", ")  + "]"
-			case .dictionary(let dict): "["  + flatMetadataArray(dict).joined(separator: ", ")                                  + "]"
-			case .stringConvertible(let c): prettyMetadataValue(.string(c.description), isFromRoot: isFromRoot)
+			case .string(let str):      #"""# + str.processForLogging(fullASCII: true, newLineProcessing: .escapeAsASCII).string + #"""#
+			case .array(let array):     #"["# + array.map{ prettyMetadataValue($0) }.joined(separator: ", ")                     + #"]"#
+			case .dictionary(let dict): #"["# +              flatMetadataArray(dict).joined(separator: ", ")                     + #"]"#
+			case .stringConvertible(let c): prettyMetadataValue(.string(c.description))
 		}
 	}
 	
