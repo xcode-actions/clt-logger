@@ -159,7 +159,7 @@ public struct CLTLogger : LogHandler {
 				logAndMetadataSeparator: " -- "
 			)
 		}
-		/* The padding correct alignment issues. */
+		/* The padding corrects alignment issues on the Terminal. */
 		return [
 			.trace:    addMeta("💩", ""),
 			.debug:    addMeta("⚙️", " "),
