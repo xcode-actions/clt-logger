@@ -154,7 +154,7 @@ public struct CLTLogger : LogHandler {
 			return .init(
 				logPrefix: str + " → ",
 				multilineLogPrefix: str + "   ",
-				metadataLinePrefix: str + " ▷▷ ",
+				metadataLinePrefix: " ▷ ",
 				metadataSeparator: " - ",
 				logAndMetadataSeparator: " -- "
 			)
