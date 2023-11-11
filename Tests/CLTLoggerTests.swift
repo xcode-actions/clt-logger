@@ -8,7 +8,7 @@ import Logging
 final class CLTLoggerTests: XCTestCase {
 	
 	override class func setUp() {
-		LoggingSystem.bootstrap{ _ in CLTLogger() }
+		LoggingSystem.bootstrap{ _ in CLTLogger(multilineMode: .allMultiline) }
 	}
 	
 	/* From <https://apple.github.io/swift-log/docs/current/Logging/Protocols/LogHandler.html#treat-log-level-amp-metadata-as-values>. */
