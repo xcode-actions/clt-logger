@@ -34,7 +34,10 @@ final class CLTLoggerTests: XCTestCase {
 		logger.logLevel = .trace
 		
 		logger.trace("w/o metadata")
-		logger.info(#"w/ "quotes'"#)
+		/* Raw string is:
+		 *    w/ "quotes' and # other\" #" "# \#(weirdnesses).
+		 * The goal is to see the output depending on the escaping done on the text. */
+		logger.info(#"w/ "quotes' and # other\" #\#" \#"# \#\#(weirdnesses)."#)
 		
 		logger[metadataKey: "from"] = #"h\]m"#
 		logger.trace("with some metadata")
