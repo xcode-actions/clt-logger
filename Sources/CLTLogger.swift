@@ -25,9 +25,12 @@ import Logging
  + You can configure the logger not to automatically add a new line after each message.
  By default, new lines are added.
  + As this logger is specially dedicated to CLT programs, the text it outputs is as small as possible on purpose:
-  only the message is displayed, w/ a potential prefix indicating the log level (or a color if colors are allowed).
+  only the message and its metadata are displayed, w/ a potential prefix indicating the log level (or a color if colors are allowed).
  + All the messages given to this logger are escaped using `scalar.escaped(asASCII: false)`,
-  and the metadata keys and values are escaped using `scalar.escaped(asASCII: true)`.
+  and the metadata keys and values are escaped using `scalar.escaped(asASCII: true)`,
+  with some tweaks.
+ In theory the resulting strings can be pasted in Swift code directly.
+ When the quotes are visible, use those, if not, use `#""#` quotes.
  
  
  #### Note
@@ -299,7 +302,7 @@ private extension CLTLogger {
 	func format(message: String, flatMetadata: [String], constants: Constants) -> Data {
 		switch multilineMode {
 			case .disallowMultiline:
-				var message = constants.logPrefix + message.processForLogging(newLineProcessing: .escapeAsASCII).string
+				var message = constants.logPrefix + message.processForLogging(escapingMode: .escapeScalars(octothorpLevel: 1), newLineProcessing: .escape).string
 				if !flatMetadata.isEmpty {
 					message += constants.logAndMetadataSeparator
 				}
@@ -308,7 +311,7 @@ private extension CLTLogger {
 				return Data(message.utf8)
 				
 			case .disallowMultilineButMetadataOnOneNewLine:
-				var message = constants.logPrefix + message.processForLogging(newLineProcessing: .escapeAsASCII).string
+				var message = constants.logPrefix + message.processForLogging(escapingMode: .escapeScalars(octothorpLevel: 1), newLineProcessing: .escape).string
 				if !flatMetadata.isEmpty {
 					message += lineSeparator + constants.metadataLinePrefix
 				}
@@ -317,13 +320,13 @@ private extension CLTLogger {
 				return Data(message.utf8)
 				
 			case .disallowMultilineButMetadataOnNewLines:
-				var message = constants.logPrefix + message.processForLogging(newLineProcessing: .escapeAsASCII).string
+				var message = constants.logPrefix + message.processForLogging(escapingMode: .escapeScalars(octothorpLevel: 1), newLineProcessing: .escape).string
 				message += flatMetadata.map{ lineSeparator + constants.metadataLinePrefix + $0 }.joined()
 				message += lineSeparator
 				return Data(message.utf8)
 				
 			case .allowMultilineWithMetadataOneSameLineUnlessMultiLineLogs:
-				let (tweakedMessage, hasTweaked) = message.processForLogging(newLineProcessing: .replace(replacement: lineSeparator + constants.multilineLogPrefix))
+				let (tweakedMessage, hasTweaked) = message.processForLogging(escapingMode: .escapeScalars(octothorpLevel: 1), newLineProcessing: .replace(replacement: lineSeparator + constants.multilineLogPrefix))
 				var message = constants.logPrefix + tweakedMessage
 				if hasTweaked {
 					/* We’re on a multiline case. */
@@ -340,7 +343,7 @@ private extension CLTLogger {
 				return Data(message.utf8)
 				
 			case .allMultiline:
-				var message = constants.logPrefix + message.processForLogging(newLineProcessing: .replace(replacement: lineSeparator + constants.multilineLogPrefix)).string
+				var message = constants.logPrefix + message.processForLogging(escapingMode: .escapeScalars(octothorpLevel: 1), newLineProcessing: .replace(replacement: lineSeparator + constants.multilineLogPrefix)).string
 				message += flatMetadata.map{ lineSeparator + constants.metadataLinePrefix + $0 }.joined()
 				message += lineSeparator
 				return Data(message.utf8)
@@ -378,7 +381,7 @@ private extension CLTLogger {
 		return metadata.lazy.sorted{ $0.key < $1.key }.map{ keyVal in
 			let (key, val) = keyVal
 			return (
-				key.processForLogging(fullASCII: true, newLineProcessing: .escapeAsASCII).string +
+				key.processForLogging(escapingMode: .escapeScalars(asASCII: true, octothorpLevel: 1), newLineProcessing: .escape).string +
 				": " +
 				prettyMetadataValue(val)
 			)
@@ -388,9 +391,9 @@ private extension CLTLogger {
 	func prettyMetadataValue(_ v: Logger.MetadataValue) -> String {
 		/* We return basically v.description, but dictionary keys are sorted. */
 		return switch v {
-			case .string(let str):      #"""# + str.processForLogging(fullASCII: true, newLineProcessing: .escapeAsASCII).string + #"""#
-			case .array(let array):     #"["# + array.map{ prettyMetadataValue($0) }.joined(separator: ", ")                     + #"]"#
-			case .dictionary(let dict): #"["# +              flatMetadataArray(dict).joined(separator: ", ")                     + #"]"#
+			case .string(let str):      str.processForLogging(escapingMode: .escapeScalars(asASCII: true, octothorpLevel: nil, showQuotes: true), newLineProcessing: .escape).string
+			case .array(let array):     #"["# + array.map{ prettyMetadataValue($0) }.joined(separator: ", ")              + #"]"#
+			case .dictionary(let dict): #"["# +              flatMetadataArray(dict).joined(separator: ", ")              + #"]"#
 			case .stringConvertible(let c): prettyMetadataValue(.string(c.description))
 		}
 	}
