@@ -1,11 +1,13 @@
+import Foundation
 import XCTest
-@testable import CLTLogger
 
 import Logging
 
+@testable import CLTLogger
 
 
-final class CLTLoggerTests: XCTestCase {
+
+final class CLTLoggerTests : XCTestCase {
 	
 	override class func setUp() {
 		LoggingSystem.bootstrap{ _ in CLTLogger(multilineMode: .allMultiline) }

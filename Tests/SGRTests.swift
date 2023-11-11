@@ -1,10 +1,12 @@
+import Foundation
 import XCTest
+
 @testable import CLTLogger
 
 
 
 /* TODO: A lot more tests! */
-final class SGRTests: XCTestCase {
+final class SGRTests : XCTestCase {
 	
 	func testSGRParseFail() {
 		XCTAssertNil(SGR(rawValue: "\(escape)[38;2;255;255m"))
@@ -53,8 +55,7 @@ final class SGRTests: XCTestCase {
 	private let escape = "\u{1B}"
 	
 	private func visualPrint(_ str: String) {
-		print(str + " <- ", terminator: "")
-		print(str.replacingOccurrences(of: escape, with: "ESC"))
+		print(str + " <- " + str.replacingOccurrences(of: escape, with: "ESC"))
 	}
 	
 }
