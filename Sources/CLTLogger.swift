@@ -113,89 +113,6 @@ public struct CLTLogger : LogHandler {
 		
 	}
 	
-	public static var defaultConstantsByLogLevelForText: [Logger.Level: Constants] = {
-		func addMeta(_ str: String) -> Constants {
-			let len1 = str.count - 2
-			let len2 = str.trimmingCharacters(in: .init(charactersIn: "[]*")).count
-			let stars = String(repeating: "*", count: len1 - len2)
-			return .init(
-				logPrefix: str + " ",
-				multilineLogPrefix: "[" + String(repeating: "+", count: len2) + "]" + stars + " ",
-				metadataLinePrefix: " meta" + stars + " - ",
-				metadataSeparator: ", ",
-				logAndMetadataSeparator: " --- meta: "
-			)
-		}
-		return [
-			.trace:    addMeta("[TRC]"),
-			.debug:    addMeta("[DBG]"),
-			.info:     addMeta("[NFO]"),
-			.notice:   addMeta("[NTC]"),
-			.warning:  addMeta("[WRN]"),
-			.error:    addMeta("[ERR]*"),
-			.critical: addMeta("[CRT]**")
-		]
-	}()
-	
-	public static var defaultConstantsByLogLevelForEmoji: [Logger.Level: Constants] = {
-		func addMeta(_ str: String, _ padding: String) -> Constants {
-			var str = str
-#if Xcode
-			if let f = getenv("CLTLOGGER_TERMINAL_EMOJI"), String(cString: f) != "NO" {
-				str = str + padding
-			}
-#else
-			if let f = getenv("CLTLOGGER_TERMINAL_EMOJI"), String(cString: f) == "NO" {
-				/*nop*/
-			} else {
-				str = str + padding
-			}
-#endif
-			return .init(
-				logPrefix: str + " → ",
-				multilineLogPrefix: str + "   ",
-				metadataLinePrefix: " ▷ ",
-				metadataSeparator: " - ",
-				logAndMetadataSeparator: " -- "
-			)
-		}
-		/* The padding corrects alignment issues on the Terminal. */
-		return [
-			.trace:    addMeta("💩", ""),
-			.debug:    addMeta("⚙️", " "),
-			.info:     addMeta("📔", ""),
-			.notice:   addMeta("🗣", " "),
-			.warning:  addMeta("⚠️", " "),
-			.error:    addMeta("❗️", ""),
-			.critical: addMeta("‼️", " ")
-		]
-	}()
-	
-	/* Terminal does not support RGB colors, so we use 255-color palette. */
-	public static var defaultConstantsByLogLevelForColors: [Logger.Level: Constants] = {
-		func str(_ spaces: String, _ str: String, _ mods1: [SGR.Modifier], _ mods2: [SGR.Modifier]) -> Constants {
-			let bgColor = SGR.Modifier.reset
-			let fgColor = SGR.Modifier.fgColorTo4BitBrightBlack
-			return .init(
-				logPrefix: SGR(.reset, bgColor, fgColor).rawValue + "[" + spaces + SGR(mods1).rawValue + str + SGR(.reset, bgColor, fgColor).rawValue + "]" + SGR.reset.rawValue + " " + SGR(mods2).rawValue,
-				multilineLogPrefix: SGR(.reset, bgColor, fgColor).rawValue + "[" + spaces + SGR(mods1).rawValue + String(repeating: "+", count: str.count) + SGR(.reset, bgColor, fgColor).rawValue + "]" + SGR.reset.rawValue + " " + SGR(mods2).rawValue,
-				metadataLinePrefix: "  " + SGR(.fgColorTo4BitWhite).rawValue + "meta:" + SGR.reset.rawValue + " " + SGR(.fgColorTo256PaletteValue(245)).rawValue,
-				metadataSeparator: SGR.reset.rawValue + " " + SGR(.fgColorTo4BitWhite).rawValue + "-" + SGR.reset.rawValue + " " + SGR(.fgColorTo256PaletteValue(245)).rawValue,
-				logAndMetadataSeparator: SGR(.reset).rawValue + " " + SGR(.fgColorTo4BitWhite).rawValue + "--" + SGR.reset.rawValue + " " + SGR(.fgColorTo256PaletteValue(245)).rawValue
-			)
-		}
-		
-		return [
-			.trace:    str("", "TRC", [.fgColorTo256PaletteValue(247), .bold],                     []),
-			.debug:    str("", "DBG", [.fgColorTo4BitYellow, .bold],                               []),
-			.info:     str("", "NFO", [.fgColorTo4BitGreen, .bold],                                []),
-			.notice:   str("", "NTC", [.fgColorTo4BitCyan, .bold],                                 []),
-			.warning:  str("", "WRN", [.fgColorTo4BitBrightMagenta, .bold],                        []),
-			.error:    str("", "ERR", [.fgColorTo4BitBrightRed, .bold],                            [.bold]),
-			.critical: str("", "CRT", [.fgColorTo4BitBrightWhite, .bgColorTo4BitBrightRed, .bold], [.bold])
-		]
-	}()
-	
 	public var logLevel: Logger.Level = .info
 	
 	public var metadata: Logger.Metadata = [:] {
@@ -287,8 +204,96 @@ public struct CLTLogger : LogHandler {
 }
 
 
+public extension CLTLogger {
+	
+	static var defaultConstantsByLogLevelForText: [Logger.Level: Constants] = {
+		func addMeta(_ str: String) -> Constants {
+			let len1 = str.count - 2
+			let len2 = str.trimmingCharacters(in: .init(charactersIn: "[]*")).count
+			let stars = String(repeating: "*", count: len1 - len2)
+			return .init(
+				logPrefix: str + " ",
+				multilineLogPrefix: "[" + String(repeating: "+", count: len2) + "]" + stars + " ",
+				metadataLinePrefix: " meta" + stars + " - ",
+				metadataSeparator: ", ",
+				logAndMetadataSeparator: " --- meta: "
+			)
+		}
+		return [
+			.trace:    addMeta("[TRC]"),
+			.debug:    addMeta("[DBG]"),
+			.info:     addMeta("[NFO]"),
+			.notice:   addMeta("[NTC]"),
+			.warning:  addMeta("[WRN]"),
+			.error:    addMeta("[ERR]*"),
+			.critical: addMeta("[CRT]**")
+		]
+	}()
+	
+	static var defaultConstantsByLogLevelForEmoji: [Logger.Level: Constants] = {
+		func addMeta(_ str: String, _ padding: String) -> Constants {
+			var str = str
+#if Xcode
+			if let f = getenv("CLTLOGGER_TERMINAL_EMOJI"), String(cString: f) != "NO" {
+				str = str + padding
+			}
+#else
+			if let f = getenv("CLTLOGGER_TERMINAL_EMOJI"), String(cString: f) == "NO" {
+				/*nop*/
+			} else {
+				str = str + padding
+			}
+#endif
+			return .init(
+				logPrefix: str + " → ",
+				multilineLogPrefix: str + "   ",
+				metadataLinePrefix: " ▷ ",
+				metadataSeparator: " - ",
+				logAndMetadataSeparator: " -- "
+			)
+		}
+		/* The padding corrects alignment issues on the Terminal. */
+		return [
+			.trace:    addMeta("💩", ""),
+			.debug:    addMeta("⚙️", " "),
+			.info:     addMeta("📔", ""),
+			.notice:   addMeta("🗣", " "),
+			.warning:  addMeta("⚠️", " "),
+			.error:    addMeta("❗️", ""),
+			.critical: addMeta("‼️", " ")
+		]
+	}()
+	
+	/* Terminal does not support RGB colors, so we use 255-color palette. */
+	static var defaultConstantsByLogLevelForColors: [Logger.Level: Constants] = {
+		func str(_ spaces: String, _ str: String, _ mods1: [SGR.Modifier], _ mods2: [SGR.Modifier]) -> Constants {
+			let bgColor = SGR.Modifier.reset
+			let fgColor = SGR.Modifier.fgColorTo4BitBrightBlack
+			return .init(
+				logPrefix: SGR(.reset, bgColor, fgColor).rawValue + "[" + spaces + SGR(mods1).rawValue + str + SGR(.reset, bgColor, fgColor).rawValue + "]" + SGR.reset.rawValue + " " + SGR(mods2).rawValue,
+				multilineLogPrefix: SGR(.reset, bgColor, fgColor).rawValue + "[" + spaces + SGR(mods1).rawValue + String(repeating: "+", count: str.count) + SGR(.reset, bgColor, fgColor).rawValue + "]" + SGR.reset.rawValue + " " + SGR(mods2).rawValue,
+				metadataLinePrefix: "  " + SGR(.fgColorTo4BitWhite).rawValue + "meta:" + SGR.reset.rawValue + " " + SGR(.fgColorTo256PaletteValue(245)).rawValue,
+				metadataSeparator: SGR.reset.rawValue + " " + SGR(.fgColorTo4BitWhite).rawValue + "-" + SGR.reset.rawValue + " " + SGR(.fgColorTo256PaletteValue(245)).rawValue,
+				logAndMetadataSeparator: SGR(.reset).rawValue + " " + SGR(.fgColorTo4BitWhite).rawValue + "--" + SGR.reset.rawValue + " " + SGR(.fgColorTo256PaletteValue(245)).rawValue
+			)
+		}
+		
+		return [
+			.trace:    str("", "TRC", [.fgColorTo256PaletteValue(247), .bold],                     []),
+			.debug:    str("", "DBG", [.fgColorTo4BitYellow, .bold],                               []),
+			.info:     str("", "NFO", [.fgColorTo4BitGreen, .bold],                                []),
+			.notice:   str("", "NTC", [.fgColorTo4BitCyan, .bold],                                 []),
+			.warning:  str("", "WRN", [.fgColorTo4BitBrightMagenta, .bold],                        []),
+			.error:    str("", "ERR", [.fgColorTo4BitBrightRed, .bold],                            [.bold]),
+			.critical: str("", "CRT", [.fgColorTo4BitBrightWhite, .bgColorTo4BitBrightRed, .bold], [.bold])
+		]
+	}()
+	
+}
+
+
 /* Formatting of the log with flat metadata. */
-extension CLTLogger {
+private extension CLTLogger {
 	
 	/* The flatMetadata array should only contain Strings that contain only one line. */
 	func format(message: String, flatMetadata: [String], constants: Constants) -> Data {
@@ -346,12 +351,12 @@ extension CLTLogger {
 
 
 /* Metadata handling. */
-extension CLTLogger {
+private extension CLTLogger {
 	
 	/**
 	 Merge the logger’s metadata, the provider’s metadata and the given explicit metadata and return the new metadata.
 	 If the provider’s metadata and the explicit metadata are `nil`, returns `nil` to signify the current `flatMetadataCache` can be used. */
-	private func mergedMetadata(with explicit: Logger.Metadata?) -> Logger.Metadata? {
+	func mergedMetadata(with explicit: Logger.Metadata?) -> Logger.Metadata? {
 		var metadata = metadata
 		let provided = metadataProvider?.get() ?? [:]
 		
@@ -369,7 +374,7 @@ extension CLTLogger {
 		return metadata
 	}
 	
-	private func flatMetadataArray(_ metadata: Logger.Metadata) -> [String] {
+	func flatMetadataArray(_ metadata: Logger.Metadata) -> [String] {
 		return metadata.lazy.sorted{ $0.key < $1.key }.map{ keyVal in
 			let (key, val) = keyVal
 			return (
@@ -380,7 +385,7 @@ extension CLTLogger {
 		}
 	}
 	
-	private func prettyMetadataValue(_ v: Logger.MetadataValue) -> String {
+	func prettyMetadataValue(_ v: Logger.MetadataValue) -> String {
 		/* We return basically v.description, but dictionary keys are sorted. */
 		return switch v {
 			case .string(let str):      #"""# + str.processForLogging(fullASCII: true, newLineProcessing: .escapeAsASCII).string + #"""#
