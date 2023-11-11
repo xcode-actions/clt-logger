@@ -33,6 +33,9 @@ final class CLTLoggerTests: XCTestCase {
 		var logger = Logger(label: "my logger")
 		logger.logLevel = .trace
 		
+		logger.trace("w/o metadata")
+		logger.info(#"w/ "quotes'"#)
+		
 		logger[metadataKey: "from"] = #"h\]m"#
 		logger.trace("with some metadata")
 		logger.notice("with some metadata", metadata: ["whats_wrong": #"Shit’s got \#(SGR(.fgColorTo4BitRed).rawValue)"some colors", yo!"#])
