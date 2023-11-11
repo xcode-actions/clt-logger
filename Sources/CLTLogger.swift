@@ -85,10 +85,10 @@ public struct CLTLogger : LogHandler {
 		 
 		 There are no options to have all the metadata on one line only if the log is multiline. */
 		case allowMultilineWithMetadataOneSameLineUnlessMultiLineLogs
-		/** Multiline logs are allowed and logs are printed after the log, one line per metadata. */
+		/** Multiline logs are allowed and logs are printed after the log, one line per metadata (metadata are never multiline). */
 		case allMultiline
 		
-		public static let `default` = Self.allowMultilineWithMetadataOneSameLineUnlessMultiLineLogs
+		public static let `default` = Self.disallowMultiline
 	}
 	
 	public struct Constants : Sendable {
