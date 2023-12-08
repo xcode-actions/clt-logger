@@ -87,7 +87,7 @@ public struct CLTLogger : LogHandler {
 		  in which case there are printed after, one line per metadata.
 		 
 		 There are no options to have all the metadata on one line only if the log is multiline. */
-		case allowMultilineWithMetadataOneSameLineUnlessMultiLineLogs
+		case allowMultilineWithMetadataOnSameLineUnlessMultiLineLogs
 		/** Multiline logs are allowed and logs are printed after the log, one line per metadata (metadata are never multiline). */
 		case allMultiline
 		
@@ -325,7 +325,7 @@ private extension CLTLogger {
 				message += lineSeparator
 				return Data(message.utf8)
 				
-			case .allowMultilineWithMetadataOneSameLineUnlessMultiLineLogs:
+			case .allowMultilineWithMetadataOnSameLineUnlessMultiLineLogs:
 				let (tweakedMessage, hasTweaked) = message.processForLogging(escapingMode: .escapeScalars(octothorpLevel: 1), newLineProcessing: .replace(replacement: lineSeparator + constants.multilineLogPrefix))
 				var message = constants.logPrefix + tweakedMessage
 				if hasTweaked {
