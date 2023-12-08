@@ -83,6 +83,11 @@ public struct CLTLogger : LogHandler {
 		/**
 		 Multiline logs are allowed.
 		 
+		 The metadata are printed on one line on the same line as the last line of the log. */
+		case allowMultilineWithMetadataOnLastLine
+		/**
+		 Multiline logs are allowed.
+		 
 		 The metadata are printed on the same line as the log, _unless_ the log is multiline,
 		  in which case there are printed after, one line per metadata.
 		 
@@ -322,6 +327,15 @@ private extension CLTLogger {
 			case .disallowMultilineButMetadataOnNewLines:
 				var message = constants.logPrefix + message.processForLogging(escapingMode: .escapeScalars(octothorpLevel: 1), newLineProcessing: .escape).string
 				message += flatMetadata.map{ lineSeparator + constants.metadataLinePrefix + $0 }.joined()
+				message += lineSeparator
+				return Data(message.utf8)
+				
+			case .allowMultilineWithMetadataOnLastLine:
+				var message = constants.logPrefix + message.processForLogging(escapingMode: .escapeScalars(octothorpLevel: 1), newLineProcessing: .replace(replacement: lineSeparator + constants.multilineLogPrefix)).string
+				if !flatMetadata.isEmpty {
+					message += constants.logAndMetadataSeparator
+				}
+				message += flatMetadata.joined(separator: constants.metadataSeparator)
 				message += lineSeparator
 				return Data(message.utf8)
 				
