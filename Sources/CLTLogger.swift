@@ -197,9 +197,9 @@ public struct CLTLogger : LogHandler {
 		/* Xcode runs program in a tty, but does not support colors. */
 		return .emoji
 #else
-		/* TODO: We should check whether the tty actually supports colors.
+		/* TODO: If we’re a tty, we should check whether it actually supports colors.
 		 * Hint: `tput colors` is able to return the numbers of colors supported in the terminal. How does it do it? */
-		return (isatty(fd.rawValue) != 0) ? .color : .emoji
+		return (isatty(fd.rawValue) != 0 || String(cString: getenv("GITHUB_ACTIONS")) == "true") ? .color : .emoji
 #endif
 	}
 	
