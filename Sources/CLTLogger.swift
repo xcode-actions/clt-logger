@@ -204,7 +204,8 @@ public struct CLTLogger : LogHandler {
 	}
 	
 	/* Do _not_ use os_unfair_lock, apparently it is bad in Swift:
-	 *  <https://twitter.com/grynspan/status/1392080373752995849>. */
+	 *  <https://twitter.com/grynspan/status/1392080373752995849>.
+	 * There is OSAllocatedUnfairLock which exists and is good, but is also not available on Linux. */
 	private static var lock = NSLock()
 	
 	private var flatMetadataCache = [String]()
