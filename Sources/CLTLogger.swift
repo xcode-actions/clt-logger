@@ -167,8 +167,6 @@ public struct CLTLogger : LogHandler {
 	}
 	
 	public func log(constants: Constants, level: Logger.Level, message: Logger.Message, metadata logMetadata: Logger.Metadata?, source: String, file: String, function: String, line: UInt) {
-		let constants = constantsByLevel[level] ?? .init()
-		
 		let effectiveFlatMetadata: [String]
 		if let m = mergedMetadata(with: logMetadata) {effectiveFlatMetadata = flatMetadataArray(m)}
 		else                                         {effectiveFlatMetadata = flatMetadataCache}
