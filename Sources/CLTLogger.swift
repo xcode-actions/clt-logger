@@ -106,17 +106,19 @@ public struct CLTLogger : LogHandler {
 		public var metadataLinePrefix: String
 		public var metadataSeparator: String
 		public var logAndMetadataSeparator: String
+		public var lineSeparator: String
 		
 		public init() {
-			self.init(logPrefix: "", multilineLogPrefix: "", metadataLinePrefix: "meta: ", metadataSeparator: ", ", logAndMetadataSeparator: " - meta: ")
+			self.init(logPrefix: "", multilineLogPrefix: "", metadataLinePrefix: "meta: ", metadataSeparator: ", ", logAndMetadataSeparator: " - meta: ", lineSeparator: "\n")
 		}
 		
-		public init(logPrefix: String, multilineLogPrefix: String, metadataLinePrefix: String, metadataSeparator: String, logAndMetadataSeparator: String) {
+		public init(logPrefix: String, multilineLogPrefix: String, metadataLinePrefix: String, metadataSeparator: String, logAndMetadataSeparator: String, lineSeparator: String) {
 			self.logPrefix = logPrefix
 			self.multilineLogPrefix = multilineLogPrefix
 			self.metadataLinePrefix = metadataLinePrefix
 			self.metadataSeparator = metadataSeparator
 			self.logAndMetadataSeparator = logAndMetadataSeparator
+			self.lineSeparator = lineSeparator
 		}
 		
 	}
@@ -131,9 +133,8 @@ public struct CLTLogger : LogHandler {
 	public let outputFileDescriptor: FileDescriptor
 	public let multilineMode: MultilineMode
 	public let constantsByLevel: [Logger.Level: Constants]
-	public let lineSeparator: String
 	
-	public init(fd: FileDescriptor = .standardError, multilineMode: MultilineMode = .default, logStyle: Style = .auto, lineSeparator: String = "\n", metadataProvider: Logger.MetadataProvider? = LoggingSystem.metadataProvider) {
+	public init(fd: FileDescriptor = .standardError, multilineMode: MultilineMode = .default, logStyle: Style = .auto, metadataProvider: Logger.MetadataProvider? = LoggingSystem.metadataProvider) {
 		let logPrefixStyle = (logStyle != .auto ? logStyle : CLTLogger.autoLogStyle(with: fd))
 		
 		let constantsByLevel: [Logger.Level: Constants]
@@ -144,16 +145,14 @@ public struct CLTLogger : LogHandler {
 			case .color: constantsByLevel = CLTLogger.defaultConstantsByLogLevelForColors
 			case .auto: fatalError()
 		}
-		let lineSeparator = (logPrefixStyle == .color ? SGR.reset.rawValue : "") + lineSeparator
 		
-		self.init(fd: fd, multilineMode: multilineMode, constantsByLevel: constantsByLevel, lineSeparator: lineSeparator, metadataProvider: metadataProvider)
+		self.init(fd: fd, multilineMode: multilineMode, constantsByLevel: constantsByLevel, metadataProvider: metadataProvider)
 	}
 	
-	public init(fd: FileDescriptor = .standardError, multilineMode: MultilineMode = .default, constantsByLevel: [Logger.Level: Constants], lineSeparator: String = "\n", metadataProvider: Logger.MetadataProvider? = LoggingSystem.metadataProvider) {
+	public init(fd: FileDescriptor = .standardError, multilineMode: MultilineMode = .default, constantsByLevel: [Logger.Level: Constants], metadataProvider: Logger.MetadataProvider? = LoggingSystem.metadataProvider) {
 		self.outputFileDescriptor = fd
 		self.multilineMode = multilineMode
 		self.constantsByLevel = constantsByLevel
-		self.lineSeparator = lineSeparator
 		
 		self.metadataProvider = metadataProvider
 	}
@@ -164,6 +163,10 @@ public struct CLTLogger : LogHandler {
 	}
 	
 	public func log(level: Logger.Level, message: Logger.Message, metadata logMetadata: Logger.Metadata?, source: String, file: String, function: String, line: UInt) {
+		log(constants: constantsByLevel[level] ?? .init(), level: level, message: message, metadata: metadata, source: source, file: file, function: function, line: line)
+	}
+	
+	public func log(constants: Constants, level: Logger.Level, message: Logger.Message, metadata logMetadata: Logger.Metadata?, source: String, file: String, function: String, line: UInt) {
 		let constants = constantsByLevel[level] ?? .init()
 		
 		let effectiveFlatMetadata: [String]
@@ -171,7 +174,7 @@ public struct CLTLogger : LogHandler {
 		else                                         {effectiveFlatMetadata = flatMetadataCache}
 		
 		/* We compute the data to print outside of the lock. */
-		let data = format(message: message.description, flatMetadata: effectiveFlatMetadata, constants: constants)
+		let data = Self.format(message: message.description, flatMetadata: effectiveFlatMetadata, multilineMode: multilineMode, constants: constants)
 		
 		/* We lock, because the writeAll function might split the write in more than 1 write
 		 *  (if the write system call only writes a part of the data).
@@ -233,7 +236,8 @@ public extension CLTLogger {
 				multilineLogPrefix: "[" + String(repeating: "+", count: len2) + "]" + stars + " ",
 				metadataLinePrefix: " meta" + stars + " - ",
 				metadataSeparator: ", ",
-				logAndMetadataSeparator: " --- meta: "
+				logAndMetadataSeparator: " --- meta: ",
+				lineSeparator: "\n"
 			)
 		}
 		return [
@@ -270,7 +274,8 @@ public extension CLTLogger {
 				multilineLogPrefix: str + "   ",
 				metadataLinePrefix: " ▷ ",
 				metadataSeparator: " - ",
-				logAndMetadataSeparator: " -- "
+				logAndMetadataSeparator: " -- ",
+				lineSeparator: "\n"
 			)
 		}
 		/* The padding corrects alignment issues on the Terminal. */
@@ -295,7 +300,8 @@ public extension CLTLogger {
 				multilineLogPrefix: SGR(.reset, bgColor, fgColor).rawValue + "[" + spaces + SGR(mods1).rawValue + String(repeating: "+", count: str.count) + SGR(.reset, bgColor, fgColor).rawValue + "]" + SGR.reset.rawValue + " " + SGR(mods2).rawValue,
 				metadataLinePrefix: "  " + SGR(.fgColorTo4BitWhite).rawValue + "meta:" + SGR.reset.rawValue + " " + SGR(.fgColorTo256PaletteValue(245)).rawValue,
 				metadataSeparator: SGR.reset.rawValue + " " + SGR(.fgColorTo4BitWhite).rawValue + "-" + SGR.reset.rawValue + " " + SGR(.fgColorTo256PaletteValue(245)).rawValue,
-				logAndMetadataSeparator: SGR.reset.rawValue + " " + SGR(.fgColorTo4BitWhite).rawValue + "--" + SGR.reset.rawValue + " " + SGR(.fgColorTo256PaletteValue(245)).rawValue
+				logAndMetadataSeparator: SGR.reset.rawValue + " " + SGR(.fgColorTo4BitWhite).rawValue + "--" + SGR.reset.rawValue + " " + SGR(.fgColorTo256PaletteValue(245)).rawValue,
+				lineSeparator: SGR.reset.rawValue + "\n"
 			)
 		}
 		
@@ -317,7 +323,7 @@ public extension CLTLogger {
 private extension CLTLogger {
 	
 	/* The flatMetadata array should only contain Strings that contain only one line. */
-	func format(message: String, flatMetadata: [String], constants: Constants) -> Data {
+	static func format(message: String, flatMetadata: [String], multilineMode: MultilineMode, constants: Constants) -> Data {
 		switch multilineMode {
 			case .disallowMultiline:
 				var message = constants.logPrefix + message.processForLogging(escapingMode: .escapeScalars(octothorpLevel: 1), newLineProcessing: .escape).string
@@ -325,54 +331,54 @@ private extension CLTLogger {
 					message += constants.logAndMetadataSeparator
 				}
 				message += flatMetadata.joined(separator: constants.metadataSeparator)
-				message += lineSeparator
+				message += constants.lineSeparator
 				return Data(message.utf8)
 				
 			case .disallowMultilineButMetadataOnOneNewLine:
 				var message = constants.logPrefix + message.processForLogging(escapingMode: .escapeScalars(octothorpLevel: 1), newLineProcessing: .escape).string
 				if !flatMetadata.isEmpty {
-					message += lineSeparator + constants.metadataLinePrefix
+					message += constants.lineSeparator + constants.metadataLinePrefix
 				}
 				message += flatMetadata.joined(separator: constants.metadataSeparator)
-				message += lineSeparator
+				message += constants.lineSeparator
 				return Data(message.utf8)
 				
 			case .disallowMultilineButMetadataOnNewLines:
 				var message = constants.logPrefix + message.processForLogging(escapingMode: .escapeScalars(octothorpLevel: 1), newLineProcessing: .escape).string
-				message += flatMetadata.map{ lineSeparator + constants.metadataLinePrefix + $0 }.joined()
-				message += lineSeparator
+				message += flatMetadata.map{ constants.lineSeparator + constants.metadataLinePrefix + $0 }.joined()
+				message += constants.lineSeparator
 				return Data(message.utf8)
 				
 			case .allowMultilineWithMetadataOnLastLine:
-				var message = constants.logPrefix + message.processForLogging(escapingMode: .escapeScalars(octothorpLevel: 1), newLineProcessing: .replace(replacement: lineSeparator + constants.multilineLogPrefix)).string
+				var message = constants.logPrefix + message.processForLogging(escapingMode: .escapeScalars(octothorpLevel: 1), newLineProcessing: .replace(replacement: constants.lineSeparator + constants.multilineLogPrefix)).string
 				if !flatMetadata.isEmpty {
 					message += constants.logAndMetadataSeparator
 				}
 				message += flatMetadata.joined(separator: constants.metadataSeparator)
-				message += lineSeparator
+				message += constants.lineSeparator
 				return Data(message.utf8)
 				
 			case .allowMultilineWithMetadataOnSameLineUnlessMultiLineLogs:
-				let (tweakedMessage, hasTweaked) = message.processForLogging(escapingMode: .escapeScalars(octothorpLevel: 1), newLineProcessing: .replace(replacement: lineSeparator + constants.multilineLogPrefix))
+				let (tweakedMessage, hasTweaked) = message.processForLogging(escapingMode: .escapeScalars(octothorpLevel: 1), newLineProcessing: .replace(replacement: constants.lineSeparator + constants.multilineLogPrefix))
 				var message = constants.logPrefix + tweakedMessage
 				if hasTweaked {
 					/* We’re on a multiline case. */
-					message += flatMetadata.map{ lineSeparator + constants.metadataLinePrefix + $0 }.joined()
-					message += lineSeparator
+					message += flatMetadata.map{ constants.lineSeparator + constants.metadataLinePrefix + $0 }.joined()
+					message += constants.lineSeparator
 				} else {
 					/* We’re on a single line case. */
 					if !flatMetadata.isEmpty {
 						message += constants.logAndMetadataSeparator
 					}
 					message += flatMetadata.joined(separator: constants.metadataSeparator)
-					message += lineSeparator
+					message += constants.lineSeparator
 				}
 				return Data(message.utf8)
 				
 			case .allMultiline:
-				var message = constants.logPrefix + message.processForLogging(escapingMode: .escapeScalars(octothorpLevel: 1), newLineProcessing: .replace(replacement: lineSeparator + constants.multilineLogPrefix)).string
-				message += flatMetadata.map{ lineSeparator + constants.metadataLinePrefix + $0 }.joined()
-				message += lineSeparator
+				var message = constants.logPrefix + message.processForLogging(escapingMode: .escapeScalars(octothorpLevel: 1), newLineProcessing: .replace(replacement: constants.lineSeparator + constants.multilineLogPrefix)).string
+				message += flatMetadata.map{ constants.lineSeparator + constants.metadataLinePrefix + $0 }.joined()
+				message += constants.lineSeparator
 				return Data(message.utf8)
 		}
 	}
