@@ -193,12 +193,11 @@ public struct CLTLogger : LogHandler {
 				default: (/* nop: The logger style is invalid, we infer the style as if the variable is not there. */)
 			}
 		}
-		print(ProcessInfo.processInfo.environment)
 		let supportsColor = {
-#if Xcode
-			/* Xcode runs the programs in a tty, but does not support colors. */
-			return false
-#else
+			if let s = getenv("__CFBundleIdentifier"), String(cString: s) == "com.apple.dt.Xcode" {
+				/* Xcode runs the programs in a tty, but does not support colors. */
+				return false
+			}
 			if isatty(fd.rawValue) != 0 {
 				/* TODO: Check whether the tty actually supports colors.
 				 * Hint: `tput colors` is able to return the numbers of colors supported in the terminal. How does it do it? */
@@ -208,7 +207,6 @@ public struct CLTLogger : LogHandler {
 				return true
 			}
 			return false
-#endif
 		}
 		return (supportsColor() ? .color : .emoji)
 	}
@@ -252,17 +250,21 @@ public extension CLTLogger {
 	static var defaultConstantsByLogLevelForEmoji: [Logger.Level: Constants] = {
 		func addMeta(_ str: String, _ padding: String) -> Constants {
 			var str = str
-#if Xcode
-			if let f = getenv("CLTLOGGER_TERMINAL_EMOJI"), String(cString: f) != "NO" {
-				str = str + padding
-			}
-#else
-			if let f = getenv("CLTLOGGER_TERMINAL_EMOJI"), String(cString: f) == "NO" {
-				/*nop*/
+			if let s = getenv("__CFBundleIdentifier"), String(cString: s) == "com.apple.dt.Xcode" {
+				/* We’re in Xcode.
+				 * By default we do not do the emoji padding, unless explicitly asked to (`CLTLOGGER_TERMINAL_EMOJI` set to anything but “NO”). */
+				if let s = getenv("CLTLOGGER_TERMINAL_EMOJI"), String(cString: s) != "NO" {
+					str = str + padding
+				}
 			} else {
-				str = str + padding
+				/* We’re not in Xcode.
+				 * By default we do the emoji padding, unless explicitly asked not to (`CLTLOGGER_TERMINAL_EMOJI` set to “NO”). */
+				if let s = getenv("CLTLOGGER_TERMINAL_EMOJI"), String(cString: s) == "NO" {
+					/*nop*/
+				} else {
+					str = str + padding
+				}
 			}
-#endif
 			return .init(
 				logPrefix: str + " → ",
 				multilineLogPrefix: str + "   ",
