@@ -190,17 +190,27 @@ public struct CLTLogger : LogHandler {
 				case "color": return .color
 				case "emoji": return .emoji
 				case "text":  return .text
-				default: (/*nop*/)
+				default: (/* nop: The logger style is invalid, we infer the style as if the variable is not there. */)
 			}
 		}
+		print(ProcessInfo.processInfo.environment)
+		let supportsColor = {
 #if Xcode
-		/* Xcode runs program in a tty, but does not support colors. */
-		return .emoji
+			/* Xcode runs the programs in a tty, but does not support colors. */
+			return false
 #else
-		/* TODO: If we’re a tty, we should check whether it actually supports colors.
-		 * Hint: `tput colors` is able to return the numbers of colors supported in the terminal. How does it do it? */
-		return (isatty(fd.rawValue) != 0 || String(cString: getenv("GITHUB_ACTIONS")) == "true") ? .color : .emoji
+			if isatty(fd.rawValue) != 0 {
+				/* TODO: Check whether the tty actually supports colors.
+				 * Hint: `tput colors` is able to return the numbers of colors supported in the terminal. How does it do it? */
+				return true
+			}
+			if let s = getenv("GITHUB_ACTIONS"), String(cString: s) == "true" {
+				return true
+			}
+			return false
 #endif
+		}
+		return (supportsColor() ? .color : .emoji)
 	}
 	
 	/* Do _not_ use os_unfair_lock, apparently it is bad in Swift:
