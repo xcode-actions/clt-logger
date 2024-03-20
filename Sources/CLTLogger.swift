@@ -174,13 +174,18 @@ public struct CLTLogger : LogHandler {
 		/* We compute the data to print outside of the lock. */
 		let data = Self.format(message: message.description, flatMetadata: effectiveFlatMetadata, multilineMode: multilineMode, constants: constants)
 		
+		Self.write(data, to: outputFileDescriptor)
+	}
+	
+	/** Writes to the given file descriptor like the logger would. */
+	public static func write(_ data: Data, to fd: FileDescriptor) {
 		/* We lock, because the writeAll function might split the write in more than 1 write
 		 *  (if the write system call only writes a part of the data).
 		 * If another part of the program writes to fd, we might get interleaved data,
 		 *  because they cannot be aware of our lock (and we cannot be aware of theirs if they have one). */
 		CLTLogger.lock.withLock{
 			/* Is there a better idea than silently drop the message in case of fail? */
-			_ = try? outputFileDescriptor.writeAll(data)
+			_ = try? fd.writeAll(data)
 		}
 	}
 	
