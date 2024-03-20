@@ -295,7 +295,7 @@ public extension CLTLogger {
 				multilineLogPrefix: SGR(.reset, bgColor, fgColor).rawValue + "[" + spaces + SGR(mods1).rawValue + String(repeating: "+", count: str.count) + SGR(.reset, bgColor, fgColor).rawValue + "]" + SGR.reset.rawValue + " " + SGR(mods2).rawValue,
 				metadataLinePrefix: "  " + SGR(.fgColorTo4BitWhite).rawValue + "meta:" + SGR.reset.rawValue + " " + SGR(.fgColorTo256PaletteValue(245)).rawValue,
 				metadataSeparator: SGR.reset.rawValue + " " + SGR(.fgColorTo4BitWhite).rawValue + "-" + SGR.reset.rawValue + " " + SGR(.fgColorTo256PaletteValue(245)).rawValue,
-				logAndMetadataSeparator: SGR(.reset).rawValue + " " + SGR(.fgColorTo4BitWhite).rawValue + "--" + SGR.reset.rawValue + " " + SGR(.fgColorTo256PaletteValue(245)).rawValue
+				logAndMetadataSeparator: SGR.reset.rawValue + " " + SGR(.fgColorTo4BitWhite).rawValue + "--" + SGR.reset.rawValue + " " + SGR(.fgColorTo256PaletteValue(245)).rawValue
 			)
 		}
 		
