@@ -163,7 +163,7 @@ public struct CLTLogger : LogHandler {
 	}
 	
 	public func log(level: Logger.Level, message: Logger.Message, metadata logMetadata: Logger.Metadata?, source: String, file: String, function: String, line: UInt) {
-		log(constants: constantsByLevel[level] ?? .init(), level: level, message: message, metadata: metadata, source: source, file: file, function: function, line: line)
+		log(constants: constantsByLevel[level] ?? .init(), level: level, message: message, metadata: logMetadata, source: source, file: file, function: function, line: line)
 	}
 	
 	public func log(constants: Constants, level: Logger.Level, message: Logger.Message, metadata logMetadata: Logger.Metadata?, source: String, file: String, function: String, line: UInt) {
