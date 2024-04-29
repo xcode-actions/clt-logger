@@ -199,7 +199,8 @@ public struct CLTLogger : LogHandler {
 #else
 		/* TODO: If we’re a tty, we should check whether it actually supports colors.
 		 * Hint: `tput colors` is able to return the numbers of colors supported in the terminal. How does it do it? */
-		return (isatty(fd.rawValue) != 0 || String(cString: getenv("GITHUB_ACTIONS")) == "true") ? .color : .emoji
+		let gitHubActionsValue = getenv("GITHUB_ACTIONS").flatMap{ String(cString: $0) }
+		return (isatty(fd.rawValue) != 0 || gitHubActionsValue == "true") ? .color : .emoji
 #endif
 	}
 	
