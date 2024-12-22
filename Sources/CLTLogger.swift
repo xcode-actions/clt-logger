@@ -1,9 +1,4 @@
 import Foundation
-#if canImport(System)
-import System
-#else
-import SystemPackage
-#endif
 
 import Logging
 
@@ -18,7 +13,7 @@ import Logging
  + Ouptuts to stderr by default.
  The idea is: “usable” text (text that is actually what the user asked for when launching your tool) should be output to stdout,
   presumably using `print`, the rest should be on stderr.
- If needed you can setup the logger to use any fd, the logger will simply `write(2)` to it.
+ If needed you can setup the logger to use any file descriptor (via a FileHandle), the logger will simply `write(2)` to it.
  + Ouptut has special control chars for colors if the output fd is a tty and Xcode is not detected.
  You can force using or force not using colors.
  + If the write syscall fails, the log is lost (or partially lost; interrupts are retried; see SystemPackage for more info).
@@ -130,27 +125,27 @@ public struct CLTLogger : LogHandler {
 	}
 	public var metadataProvider: Logger.MetadataProvider?
 	
-	public let outputFileDescriptor: FileDescriptor
+	public let outputFileHandle: FileHandle
 	public let multilineMode: MultilineMode
 	public let constantsByLevel: [Logger.Level: Constants]
 	
-	public init(fd: FileDescriptor = .standardError, multilineMode: MultilineMode = .default, logStyle: Style = .auto, metadataProvider: Logger.MetadataProvider? = LoggingSystem.metadataProvider) {
-		let logPrefixStyle = (logStyle != .auto ? logStyle : CLTLogger.autoLogStyle(with: fd))
+	public init(fileHandle: FileHandle = .standardError, multilineMode: MultilineMode = .default, logStyle: Style = .auto, metadataProvider: Logger.MetadataProvider? = LoggingSystem.metadataProvider) {
+		let logPrefixStyle = (logStyle != .auto ? logStyle : CLTLogger.autoLogStyle(with: fileHandle))
 		
 		let constantsByLevel: [Logger.Level: Constants]
 		switch logPrefixStyle {
 			case .none:  constantsByLevel = [:]
 			case .text:  constantsByLevel = CLTLogger.defaultConstantsByLogLevelForText
-			case .emoji: constantsByLevel = CLTLogger.defaultConstantsByLogLevelForEmoji(on: fd)
+			case .emoji: constantsByLevel = CLTLogger.defaultConstantsByLogLevelForEmoji(on: fileHandle)
 			case .color: constantsByLevel = CLTLogger.defaultConstantsByLogLevelForColors
 			case .auto: fatalError()
 		}
 		
-		self.init(fd: fd, multilineMode: multilineMode, constantsByLevel: constantsByLevel, metadataProvider: metadataProvider)
+		self.init(fileHandle: fileHandle, multilineMode: multilineMode, constantsByLevel: constantsByLevel, metadataProvider: metadataProvider)
 	}
 	
-	public init(fd: FileDescriptor = .standardError, multilineMode: MultilineMode = .default, constantsByLevel: [Logger.Level: Constants], metadataProvider: Logger.MetadataProvider? = LoggingSystem.metadataProvider) {
-		self.outputFileDescriptor = fd
+	public init(fileHandle: FileHandle = .standardError, multilineMode: MultilineMode = .default, constantsByLevel: [Logger.Level: Constants], metadataProvider: Logger.MetadataProvider? = LoggingSystem.metadataProvider) {
+		self.outputFileHandle = fileHandle
 		self.multilineMode = multilineMode
 		self.constantsByLevel = constantsByLevel
 		
@@ -174,22 +169,25 @@ public struct CLTLogger : LogHandler {
 		/* We compute the data to print outside of the lock. */
 		let data = Self.format(message: message.description, flatMetadata: effectiveFlatMetadata, multilineMode: multilineMode, constants: constants)
 		
-		Self.write(data, to: outputFileDescriptor)
+		Self.write(data, to: outputFileHandle)
 	}
 	
 	/** Writes to the given file descriptor like the logger would. */
-	public static func write(_ data: Data, to fd: FileDescriptor) {
+	public static func write(_ data: Data, to fh: FileHandle) {
 		/* We lock, because the writeAll function might split the write in more than 1 write
 		 *  (if the write system call only writes a part of the data).
-		 * If another part of the program writes to fd, we might get interleaved data,
+		 * If another part of the program writes to the file descriptor, we might get interleaved data,
 		 *  because they cannot be aware of our lock (and we cannot be aware of theirs if they have one). */
 		CLTLogger.lock.withLock{
 			/* Is there a better idea than silently drop the message in case of fail? */
-			_ = try? fd.writeAll(data)
+			/* Is the write retried on interrupt?
+			 * We’ll assume yes, but we don’t and can’t know for sure
+			 *  until FileHandle has been migrated to the open-source Foundation. */
+			_ = try? fh.write(contentsOf: data)
 		}
 	}
 	
-	private static func autoLogStyle(with fd: FileDescriptor) -> Style {
+	private static func autoLogStyle(with fh: FileHandle) -> Style {
 		if let s = getenv("CLTLOGGER_LOG_STYLE") {
 			switch String(cString: s) {
 				case "none":  return .none
@@ -204,14 +202,14 @@ public struct CLTLogger : LogHandler {
 		
 		/* Is the fd on which we write a tty?
 		 * Most ttys nowadays support colors, with a notable exception: Xcode. */
-		if isatty(fd.rawValue) != 0 {
+		if isatty(fh.fileDescriptor) != 0 {
 			/* Xcode detection: it ain’t trivial.
 			 * I found checking for the existence of the __XCODE_BUILT_PRODUCTS_DIR_PATHS env var to be a possible solution.
 			 * We could also probably check for the existence of the TERM env var: Xcode does not set it.
 			 * (When Package.swift is built we can check if the value of the __CFBundleIdentifier env var is "com.apple.dt.Xcode".)
 			 * The solution we’re currently using is to check whether the fd on which we write has a foreground process group as Xcode does not set one. 
 			 * Note: If Xcode detection is changed here, it should also be changed in defaultConstantsByLogLevelForEmoji. */
-			if tcgetpgrp(fd.rawValue) == -1 && errno == ENOTTY {
+			if tcgetpgrp(fh.fileDescriptor) == -1 && errno == ENOTTY {
 				/* We log using emojis in Xcode. */
 				return .emoji
 			}
@@ -264,10 +262,10 @@ public extension CLTLogger {
 		]
 	}()
 	
-	static func defaultConstantsByLogLevelForEmoji(on fd: FileDescriptor) -> [Logger.Level: Constants] {
+	static func defaultConstantsByLogLevelForEmoji(on fh: FileHandle) -> [Logger.Level: Constants] {
 		func addMeta(_ str: String, _ padding: String) -> Constants {
 			var str = str
-			if isatty(fd.rawValue) != 0, tcgetpgrp(fd.rawValue) == -1, errno == ENOTTY {
+			if isatty(fh.fileDescriptor) != 0, tcgetpgrp(fh.fileDescriptor) == -1, errno == ENOTTY {
 				/* We’re in Xcode (probably).
 				 * By default we do not do the emoji padding, unless explicitly asked to (`CLTLOGGER_TERMINAL_EMOJI` set to anything but “NO”). */
 				if let s = getenv("CLTLOGGER_TERMINAL_EMOJI"), String(cString: s) != "NO" {
