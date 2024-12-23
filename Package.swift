@@ -1,18 +1,10 @@
-// swift-tools-version:5.8
+// swift-tools-version:5.2
 import PackageDescription
 
 
-//let swiftSettings: [SwiftSetting] = []
-let swiftSettings: [SwiftSetting] = [.enableExperimentalFeature("StrictConcurrency")]
-
 let package = Package(
 	name: "clt-logger",
-	platforms: [
-		.macOS(.v11),
-		.tvOS(.v14),
-		.iOS(.v14),
-		.watchOS(.v7),
-	],
+	/* Not sure how to test for platforms for Swift pre-5.8; let’s not do it. */
 	products: [
 		.library(name: "CLTLogger", targets: ["CLTLogger"]),
 	],
@@ -22,7 +14,7 @@ let package = Package(
 	targets: [
 		.target(name: "CLTLogger", dependencies: [
 			.product(name: "Logging", package: "swift-log"),
-		], path: "Sources", swiftSettings: swiftSettings),
-		.testTarget(name: "CLTLoggerTests", dependencies: ["CLTLogger"], path: "Tests", swiftSettings: swiftSettings)
+		], path: "Sources"),
+		.testTarget(name: "CLTLoggerTests", dependencies: ["CLTLogger"], path: "Tests")
 	]
 )
