@@ -434,11 +434,11 @@ private extension CLTLogger {
 	
 	func prettyMetadataValue(_ v: Logger.MetadataValue) -> String {
 		/* We return basically v.description, but dictionary keys are sorted. */
-		return switch v {
-			case .string(let str):      str.processForLogging(escapingMode: .escapeScalars(asASCII: true, octothorpLevel: nil, showQuotes: true), newLineProcessing: .escape).string
-			case .array(let array):     #"["# + array.map{ prettyMetadataValue($0) }.joined(separator: ", ") + #"]"#
-			case .dictionary(let dict): #"["# +              flatMetadataArray(dict).joined(separator: ", ") + #"]"#
-			case .stringConvertible(let c): prettyMetadataValue(.string(c.description))
+		switch v {
+			case .string(let str):          return str.processForLogging(escapingMode: .escapeScalars(asASCII: true, octothorpLevel: nil, showQuotes: true), newLineProcessing: .escape).string
+			case .array(let array):         return #"["# + array.map{ prettyMetadataValue($0) }.joined(separator: ", ") + #"]"#
+			case .dictionary(let dict):     return #"["# +              flatMetadataArray(dict).joined(separator: ", ") + #"]"#
+			case .stringConvertible(let c): return prettyMetadataValue(.string(c.description))
 		}
 	}
 	
