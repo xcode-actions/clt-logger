@@ -59,7 +59,7 @@ public struct CLTLogger : LogHandler {
 	 Newlines in the metadata themselves are always replaced by \n (and other special characters are escaped too).
 	 
 	 For now there is no option to allow multilines metadata. */
-	public enum MultilineMode : Sendable {
+	public enum MultilineMode : CLTLogger_Sendable {
 		/**
 		 The new lines in logs are replaced by the given value, the metadata are printed on the same line as the log.
 		 
@@ -94,7 +94,7 @@ public struct CLTLogger : LogHandler {
 		public static let `default` = Self.disallowMultiline
 	}
 	
-	public struct Constants : Sendable {
+	public struct Constants : CLTLogger_Sendable {
 		
 		public var logPrefix: String
 		public var multilineLogPrefix: String
