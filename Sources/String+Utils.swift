@@ -65,7 +65,7 @@ internal extension String {
 		
 		var hasProcessedNewLines = false
 		var specialCharState: (UnicodeScalar, Int)? = nil /* First element is the special char, the other is the number of octothorps found. */
-		let ascii = unicodeScalars.lazy.map{ scalar in
+		let ascii = unicodeScalars.lazy.map{ scalar -> String in
 			/* Let’s build the previous escape if needed. */
 			let prefix: String
 			if scalar == "#" {
@@ -115,7 +115,9 @@ internal extension String {
 					return prefix + (octothorpLevel == 0 ? escaped : escaped.replacingOccurrences(of: #"\"#, with: #"\"# + octothorps, options: .literal))
 			}
 		}
-		return (sepOpen + ascii.joined(separator: "") + (specialCharState.flatMap{ String($0.0) + String(repeating: "#", count: $0.1) } ?? "") + sepClose, hasProcessedNewLines)
+		let asciiJoined = ascii.joined(separator: "")
+		let specialCharStateMapped = (specialCharState.flatMap{ String($0.0) + String(repeating: "#", count: $0.1) } ?? "")
+		return (sepOpen + asciiJoined + specialCharStateMapped + sepClose, hasProcessedNewLines)
 	}
 	
 	private static let newLines = CharacterSet.newlines
