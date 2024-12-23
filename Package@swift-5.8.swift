@@ -23,6 +23,6 @@ let package = Package(
 		.target(name: "CLTLogger", dependencies: [
 			.product(name: "Logging", package: "swift-log"),
 		], path: "Sources", swiftSettings: swiftSettings),
-		.testTarget(name: "CLTLoggerTests", dependencies: ["CLTLogger"], path: "Tests", swiftSettings: swiftSettings)
+		.testTarget(name: "CLTLoggerTests", dependencies: ["CLTLogger"], swiftSettings: swiftSettings)
 	]
 )
