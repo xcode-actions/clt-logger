@@ -59,7 +59,7 @@ public struct CLTLogger : LogHandler {
 	 Newlines in the metadata themselves are always replaced by \n (and other special characters are escaped too).
 	 
 	 For now there is no option to allow multilines metadata. */
-	public enum MultilineMode {
+	public enum MultilineMode : Sendable {
 		/**
 		 The new lines in logs are replaced by the given value, the metadata are printed on the same line as the log.
 		 
@@ -228,7 +228,7 @@ public struct CLTLogger : LogHandler {
 	/* Do _not_ use os_unfair_lock, apparently it is bad in Swift:
 	 *  <https://twitter.com/grynspan/status/1392080373752995849>.
 	 * There is OSAllocatedUnfairLock which exists and is good, but is also not available on Linux. */
-	private static var lock = NSLock()
+	private static let lock = NSLock()
 	
 	private var flatMetadataCache = [String]()
 	
@@ -237,7 +237,7 @@ public struct CLTLogger : LogHandler {
 
 public extension CLTLogger {
 	
-	static var defaultConstantsByLogLevelForText: [Logger.Level: Constants] = {
+	static let defaultConstantsByLogLevelForText: [Logger.Level: Constants] = {
 		func addMeta(_ str: String) -> Constants {
 			let len1 = str.count - 2
 			let len2 = str.trimmingCharacters(in: .init(charactersIn: "[]*")).count
@@ -302,7 +302,7 @@ public extension CLTLogger {
 	}
 	
 	/* Terminal does not support RGB colors, so we use 255-color palette. */
-	static var defaultConstantsByLogLevelForColors: [Logger.Level: Constants] = {
+	static let defaultConstantsByLogLevelForColors: [Logger.Level: Constants] = {
 		func str(_ spaces: String, _ str: String, _ mods1: [SGR.Modifier], _ mods2: [SGR.Modifier]) -> Constants {
 			let bgColor = SGR.Modifier.reset
 			let fgColor = SGR.Modifier.fgColorTo4BitBrightBlack
