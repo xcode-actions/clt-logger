@@ -404,7 +404,7 @@ private extension CLTLogger {
 	 Merge the logger’s metadata, the provider’s metadata and the given explicit metadata and return the new metadata.
 	 If the provider’s metadata and the explicit metadata are `nil`, returns `nil` to signify the current `flatMetadataCache` can be used. */
 	func mergedMetadata(with explicit: Logger.Metadata?) -> Logger.Metadata? {
-		var metadata = metadata
+		var metadata = self.metadata /* The self is required for Swift 5.3-. */
 		let provided = metadataProvider?.get() ?? [:]
 		
 		guard !provided.isEmpty || !((explicit ?? [:]).isEmpty) else {
