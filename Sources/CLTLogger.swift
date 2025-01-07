@@ -271,58 +271,32 @@ public extension CLTLogger {
 	}()
 	
 	static func defaultConstantsByLogLevelForEmoji(on fh: FileHandle) -> [Logger.Level: Constants] {
-		func addMeta(_ str: String, _ padding: String) -> Constants {
-			var str = str
-#if !os(Windows)
-			let isXcode = (isatty(fh.fileDescriptor) != 0 && tcgetpgrp(fh.fileDescriptor) == -1 && errno == ENOTTY)
-			let needsPaddingByDefault = !isXcode
-#else
-			let needsPaddingByDefault = true
-#endif
-			if !needsPaddingByDefault {
-				/* By default we do not do the emoji padding, unless explicitly asked to (`CLTLOGGER_TERMINAL_EMOJI` set to anything but “NO”). */
-				if let s = ProcessInfo.processInfo.environment["CLTLOGGER_TERMINAL_EMOJI"], s != "NO" {
-					str = str + padding
-				}
-			} else {
-				/* By default we do the emoji padding, unless explicitly asked not to (`CLTLOGGER_TERMINAL_EMOJI` set to “NO”). */
-				if ProcessInfo.processInfo.environment["CLTLOGGER_TERMINAL_EMOJI"] == "NO" {
-					/*nop*/
-				} else {
-					str = str + padding
-				}
-			}
+		func addMeta(_ paddedEmoji: String) -> Constants {
 			return .init(
-				logPrefix: str + " → ",
-				multilineLogPrefix: str + "   ",
+				logPrefix: paddedEmoji + " → ",
+				multilineLogPrefix: paddedEmoji + "   ",
 				metadataLinePrefix: " ▷ ",
 				metadataSeparator: " - ",
 				logAndMetadataSeparator: " -- ",
 				lineSeparator: "\n"
 			)
 		}
-		/* The padding corrects alignment issues in the Terminal and VSCode.
-		 * In Windows PowerShell, the alignment is off for the debug and warning levels.
-		 * We could try and detect PowerShell somehow and fix the alignment for those. */
+		let envVars = ProcessInfo.processInfo.environment
+		let outputEnvironment: OutputEnvironment = .detect(from: fh, envVars)
+		let emojiSet = EmojiSet.default(for: outputEnvironment)
+		/* To see all the emojis with the padding. If padding is correct, everything should be aligned. */
+		//for emoji in Emoji.allCases {
+		//	print("\(emoji.rawValue)\(emoji.padding(for: outputEnvironment)) |")
+		//}
 		return [
-			.trace:    addMeta("💩", ""),
-			.debug:    addMeta("⚙️", " "),
-			.info:     addMeta("📔", ""),
-			.notice:   addMeta("🗣", " "),
-			.warning:  addMeta("⚠️", " "),
-		].merging({
-#if !os(Windows)
-		[
-			.error:    addMeta("❗️", ""),
-			.critical: addMeta("‼️", " ")
+			.trace:    addMeta(emojiSet.paddedEmoji(for: .trace,    in: outputEnvironment)),
+			.debug:    addMeta(emojiSet.paddedEmoji(for: .debug,    in: outputEnvironment)),
+			.info:     addMeta(emojiSet.paddedEmoji(for: .info,     in: outputEnvironment)),
+			.notice:   addMeta(emojiSet.paddedEmoji(for: .notice,   in: outputEnvironment)),
+			.warning:  addMeta(emojiSet.paddedEmoji(for: .warning,  in: outputEnvironment)),
+			.error:    addMeta(emojiSet.paddedEmoji(for: .error,    in: outputEnvironment)),
+			.critical: addMeta(emojiSet.paddedEmoji(for: .critical, in: outputEnvironment)),
 		]
-#else
-		[
-			.error:    addMeta("❌", ""),
-			.critical: addMeta("🚨", ""),
-		]
-#endif
-		}(), uniquingKeysWith: { _, new in preconditionFailure() })
 	}
 	
 	/* Terminal does not support RGB colors, so we use 255-color palette. */
