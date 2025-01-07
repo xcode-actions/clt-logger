@@ -14,9 +14,15 @@ internal enum Emoji : String, CaseIterable {
 	case eyebrow                = "🤨"
 	case redCross               = "❌"
 	case policeLight            = "🚨"
-	case ladybug                = "🐞"
+	case worm                   = "🐛"
 	case orangeDiamond          = "🔶"
 	
+	case ambulance              = "🚑"
+	case ladybug                = "🐞"
+	case monocle                = "🧐"
+	case greenCheck             = "✅"
+	case fearFace               = "😱"
+
 	case redHeart               = "❤️"
 	case orangeHeart            = "🧡"
 	case yellowHeart            = "💛"
@@ -37,9 +43,12 @@ internal enum Emoji : String, CaseIterable {
 		}
 		
 		switch self {
-			case .poo, .notebook, .eyebrow, .redCross, .policeLight, .ladybug, .orangeDiamond,
+			case .poo, .notebook, .eyebrow, .redCross, .policeLight, .worm, .orangeDiamond,
 				  .orangeHeart, .yellowHeart, .greenHeart, .blueHeart, .purpleHeart,
 				  .blackHeart, .brownHeart, .whiteHeart:
+				return ""
+				
+			case .ambulance, .ladybug, .monocle, .greenCheck, .fearFace:
 				return ""
 				
 			case .cog, .warning, .doubleExclamationPoint, .redHeart:

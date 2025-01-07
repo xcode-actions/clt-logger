@@ -14,7 +14,8 @@ internal enum EmojiSet : String {
 	case originalForVSCodeMacOS     = "ORIGINAL+VSCODE_MACOS"
 	case originalForVSCodeWindows   = "ORIGINAL+VSCODE_WINDOWS"
 	
-	case vaibhavsingh97EmojiLogger = "VAIBHAVSINGH97_EMOJI_LOGGER"
+	case vaibhavsingh97EmojiLogger               = "VAIBHAVSINGH97_EMOJI_LOGGER"
+	case vaibhavsingh97EmojiLoggerForVSCodeMacOS = "VAIBHAVSINGH97_EMOJI_LOGGER+VSCODE_MACOS"
 	
 	static func `default`(for environment: OutputEnvironment, _ envVars: [String: String] = ProcessInfo.processInfo.environment) -> EmojiSet {
 		if let envStr = envVars["CLTLOGGER_EMOJI_SET_NAME"], let ret = EmojiSet(rawValue: envStr) {
@@ -56,6 +57,17 @@ internal enum EmojiSet : String {
 				case .trace:    return .poo
 			}
 		}
+		let vaibhavsingh97: (Logger.Level) -> Emoji = {
+			switch $0 {
+				case .critical: return .ambulance
+				case .error:    return .fearFace
+				case .warning:  return .warning
+				case .notice:   return .greenCheck /* Called success in upstream. */
+				case .info:     return .monocle
+				case .debug:    return .ladybug
+				case .trace:    return .poo /* Does not exist in upstream. */
+			}
+		}
 		
 		switch self {
 			case .original:
@@ -72,7 +84,7 @@ internal enum EmojiSet : String {
 				switch logLevel {
 					case .critical: return .policeLight
 					case .warning:  return .orangeDiamond
-					case .debug:    return .ladybug
+					case .debug:    return .worm
 					default:        return original(logLevel)
 				}
 				
@@ -84,8 +96,13 @@ internal enum EmojiSet : String {
 				}
 				
 			case .vaibhavsingh97EmojiLogger:
-				/* TODO */
-				return original(logLevel)
+				return vaibhavsingh97(logLevel)
+				
+			case .vaibhavsingh97EmojiLoggerForVSCodeMacOS:
+				switch logLevel {
+					case .warning: return .orangeDiamond
+					default:       return vaibhavsingh97(logLevel)
+				}
 		}
 	}
 	
