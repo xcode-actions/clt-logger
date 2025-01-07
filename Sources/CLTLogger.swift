@@ -191,8 +191,8 @@ public struct CLTLogger : LogHandler {
 	}
 	
 	private static func autoLogStyle(with fh: FileHandle) -> Style {
-		if let s = getenv("CLTLOGGER_LOG_STYLE") {
-			switch String(cString: s) {
+		if let s = ProcessInfo.processInfo.environment["CLTLOGGER_LOG_STYLE"] {
+			switch s {
 				case "none":  return .none
 				case "color": return .color
 				case "emoji": return .emoji
@@ -203,7 +203,7 @@ public struct CLTLogger : LogHandler {
 		
 		/* * * The logging style is not defined specifically in the dedicated environment value: we try and detect a correct value depending on other environmental clues. * * */
 		
-		if let s = getenv("GITHUB_ACTIONS"), String(cString: s) == "true" {
+		if ProcessInfo.processInfo.environment["GITHUB_ACTIONS"] == "true" {
 			/* GitHub does support colors. */
 			return .color
 		}
@@ -223,7 +223,7 @@ public struct CLTLogger : LogHandler {
 			}
 			/* If the TERM env var is not set we assume colors are not supported and return the text logging style. 
 			 * In theory we should use the curses database to check for colors (ncurses has the `has_colors` function for this). */
-			return (getenv("TERM") == nil ? .text : .color)
+			return (ProcessInfo.processInfo.environment["TERM"] == nil ? .text : .color)
 		}
 #else
 		if GetFileType(fh._handle) == FILE_TYPE_CHAR {
@@ -281,13 +281,13 @@ public extension CLTLogger {
 			if isXcode {
 				/* We’re in Xcode (probably).
 				 * By default we do not do the emoji padding, unless explicitly asked to (`CLTLOGGER_TERMINAL_EMOJI` set to anything but “NO”). */
-				if let s = getenv("CLTLOGGER_TERMINAL_EMOJI"), String(cString: s) != "NO" {
+				if let s = ProcessInfo.processInfo.environment["CLTLOGGER_TERMINAL_EMOJI"], s != "NO" {
 					str = str + padding
 				}
 			} else {
 				/* We’re not in Xcode (probably).
 				 * By default we do the emoji padding, unless explicitly asked not to (`CLTLOGGER_TERMINAL_EMOJI` set to “NO”). */
-				if let s = getenv("CLTLOGGER_TERMINAL_EMOJI"), String(cString: s) == "NO" {
+				if ProcessInfo.processInfo.environment["CLTLOGGER_TERMINAL_EMOJI"] == "NO" {
 					/*nop*/
 				} else {
 					str = str + padding
