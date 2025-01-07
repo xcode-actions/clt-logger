@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(WinSDK)
+import WinSDK
+#endif
 
 import Logging
 
@@ -200,6 +203,11 @@ public struct CLTLogger : LogHandler {
 		
 		/* * * The logging style is not defined specifically in the dedicated environment value: we try and detect a correct value depending on other environmental clues. * * */
 		
+		if let s = getenv("GITHUB_ACTIONS"), String(cString: s) == "true" {
+			/* GitHub does support colors. */
+			return .color
+		}
+#if !os(Windows)
 		/* Is the fd on which we write a tty?
 		 * Most ttys nowadays support colors, with a notable exception: Xcode. */
 		if isatty(fh.fileDescriptor) != 0 {
@@ -217,10 +225,10 @@ public struct CLTLogger : LogHandler {
 			 * In theory we should use the curses database to check for colors (ncurses has the `has_colors` function for this). */
 			return (getenv("TERM") == nil ? .text : .color)
 		}
-		if let s = getenv("GITHUB_ACTIONS"), String(cString: s) == "true" {
-			/* GitHub does support colors. */
-			return .color
+#else
+		if GetFileType(fh._handle) == FILE_TYPE_CHAR {
 		}
+#endif
 		/* Unknown case: we return the text logging style. */
 		return .text
 	}
@@ -265,7 +273,12 @@ public extension CLTLogger {
 	static func defaultConstantsByLogLevelForEmoji(on fh: FileHandle) -> [Logger.Level: Constants] {
 		func addMeta(_ str: String, _ padding: String) -> Constants {
 			var str = str
-			if isatty(fh.fileDescriptor) != 0, tcgetpgrp(fh.fileDescriptor) == -1, errno == ENOTTY {
+#if !os(Windows)
+			let isXcode = (isatty(fh.fileDescriptor) != 0 && tcgetpgrp(fh.fileDescriptor) == -1 && errno == ENOTTY)
+#else
+			let isXcode = false
+#endif
+			if isXcode {
 				/* We’re in Xcode (probably).
 				 * By default we do not do the emoji padding, unless explicitly asked to (`CLTLOGGER_TERMINAL_EMOJI` set to anything but “NO”). */
 				if let s = getenv("CLTLOGGER_TERMINAL_EMOJI"), String(cString: s) != "NO" {
