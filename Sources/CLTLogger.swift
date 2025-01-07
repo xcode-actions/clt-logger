@@ -275,18 +275,17 @@ public extension CLTLogger {
 			var str = str
 #if !os(Windows)
 			let isXcode = (isatty(fh.fileDescriptor) != 0 && tcgetpgrp(fh.fileDescriptor) == -1 && errno == ENOTTY)
+			let needsPaddingByDefault = !isXcode
 #else
-			let isXcode = false
+			let needsPaddingByDefault = true
 #endif
-			if isXcode {
-				/* We’re in Xcode (probably).
-				 * By default we do not do the emoji padding, unless explicitly asked to (`CLTLOGGER_TERMINAL_EMOJI` set to anything but “NO”). */
+			if !needsPaddingByDefault {
+				/* By default we do not do the emoji padding, unless explicitly asked to (`CLTLOGGER_TERMINAL_EMOJI` set to anything but “NO”). */
 				if let s = ProcessInfo.processInfo.environment["CLTLOGGER_TERMINAL_EMOJI"], s != "NO" {
 					str = str + padding
 				}
 			} else {
-				/* We’re not in Xcode (probably).
-				 * By default we do the emoji padding, unless explicitly asked not to (`CLTLOGGER_TERMINAL_EMOJI` set to “NO”). */
+				/* By default we do the emoji padding, unless explicitly asked not to (`CLTLOGGER_TERMINAL_EMOJI` set to “NO”). */
 				if ProcessInfo.processInfo.environment["CLTLOGGER_TERMINAL_EMOJI"] == "NO" {
 					/*nop*/
 				} else {
