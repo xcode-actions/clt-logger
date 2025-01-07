@@ -302,23 +302,23 @@ public extension CLTLogger {
 			)
 		}
 		/* The padding corrects alignment issues in the Terminal and VSCode.
-		 * In Windows PowerShell, the alignment is off for the debug, warning and error levels.
-		 * For the first two we could try and detect PowerShell somehow and remove the alignment,
-		 *  but for the error one we are already **not** compensating the alignment, so there’s not much we can do. */
+		 * In Windows PowerShell, the alignment is off for the debug and warning levels.
+		 * We could try and detect PowerShell somehow and fix the alignment for those. */
 		return [
 			.trace:    addMeta("💩", ""),
 			.debug:    addMeta("⚙️", " "),
 			.info:     addMeta("📔", ""),
 			.notice:   addMeta("🗣", " "),
 			.warning:  addMeta("⚠️", " "),
-			.error:    addMeta("❗️", ""),
 		].merging({
 #if !os(Windows)
 		[
+			.error:    addMeta("❗️", ""),
 			.critical: addMeta("‼️", " ")
 		]
 #else
 		[
+			.error:    addMeta("❌", ""),
 			.critical: addMeta("🚨", ""),
 		]
 #endif
