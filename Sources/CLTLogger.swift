@@ -227,6 +227,7 @@ public struct CLTLogger : LogHandler {
 		}
 #else
 		if GetFileType(fh._handle) == FILE_TYPE_CHAR {
+			return .color
 		}
 #endif
 		/* Unknown case: we return the text logging style. */
