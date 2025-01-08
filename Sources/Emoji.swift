@@ -16,31 +16,45 @@ internal enum Emoji : String, CaseIterable {
 	case policeLight            = "🚨"
 	case worm                   = "🐛"
 	
-	case ambulance              = "🚑"
-	case ladybug                = "🐞"
-	case monocle                = "🧐"
-	case greenCheck             = "✅"
-	case fearFace               = "😱"
+	case ambulance  = "🚑"
+	case ladybug    = "🐞"
+	case monocle    = "🧐"
+	case greenCheck = "✅"
+	case fearFace   = "😱"
 	
-	case greySmallSquare        = "◽️"
-	case blackSmallSquare       = "◾️"
-	case blueDiamond            = "🔷"
-	case orangeDiamond          = "🔶"
+	case greySmallSquare  = "◽️"
+	case blackSmallSquare = "◾️"
+	case blueDiamond      = "🔷"
+	case orangeDiamond    = "🔶"
 	
-	case deepRedHeart           = "♥️"
-	case redHeart               = "❤️"
-	case orangeHeart            = "🧡"
-	case yellowHeart            = "💛"
-	case greenHeart             = "💚"
-	case blueHeart              = "💙"
-	case purpleHeart            = "💜"
-	case blackHeart             = "🖤"
-	case greyHeart              = "🩶"
-	case brownHeart             = "🤎"
-	case whiteHeart             = "🤍"
-	case pinkHeart              = "🩷"
-	case lightBlueHeart         = "🩵"
+	case   deepRedHeart = "♥️"
+	case       redHeart = "❤️"
+	case    orangeHeart = "🧡"
+	case    yellowHeart = "💛"
+	case     greenHeart = "💚"
+	case      blueHeart = "💙"
+	case    purpleHeart = "💜"
+	case     blackHeart = "🖤"
+	case      greyHeart = "🩶"
+	case     brownHeart = "🤎"
+	case     whiteHeart = "🤍"
+	case      pinkHeart = "🩷"
+	case lightBlueHeart = "🩵"
 	
+	case      wrongWayCircle = "⛔️"
+	case           redCircle = "🔴"
+	case        orangeCircle = "🟠"
+	case        yellowCircle = "🟡"
+	case         greenCircle = "🟢"
+	case          blueCircle = "🔵"
+	case        purpleCircle = "🟣"
+	case         blackCircle = "⚫️"
+	case         brownCircle = "🟤"
+	case         whiteCircle = "⚪️"
+	case     redStrokeCircle = "⭕️"
+	case selectedRadioCircle = "🔘" /* Ugly on Windows… */
+	
+	/* ⚠️ When this is modified, fallbacks in the EmojiSet enum should be verified. */
 	func rendersAsText(in environment: OutputEnvironment) -> Bool {
 		let textEmojis: Set<Emoji>
 		switch environment {
@@ -49,7 +63,7 @@ internal enum Emoji : String, CaseIterable {
 				return false
 				
 			case .windowsTerminal, .windowsConsole, .windowsUnknown:
-				textEmojis = [.doubleExclamationPoint, .greySmallSquare, .blackSmallSquare, .deepRedHeart]
+				textEmojis = [.doubleExclamationPoint, .greySmallSquare, .blackSmallSquare, .deepRedHeart, .redStrokeCircle]
 				
 			case .macOSVSCode:   textEmojis = [.cog, .warning, .doubleExclamationPoint, .redHeart, .deepRedHeart, .greySmallSquare, .blackSmallSquare]
 			case .windowsVSCode: textEmojis = [.speaker, .doubleExclamationPoint, .deepRedHeart]
@@ -70,6 +84,10 @@ internal enum Emoji : String, CaseIterable {
 				  .blackHeart, .brownHeart, .whiteHeart:
 				return ""
 				
+			case .redCircle, .orangeCircle, .yellowCircle, .greenCircle, .blueCircle,
+				  .purpleCircle, .brownCircle, .selectedRadioCircle:
+				return ""
+				
 			case .ambulance, .ladybug, .monocle, .greenCheck, .fearFace,
 				  .blueDiamond, .orangeDiamond:
 				return ""
@@ -84,7 +102,7 @@ internal enum Emoji : String, CaseIterable {
 				else {return " "}
 				return ""
 				
-			case .exclamationPoint, .greySmallSquare, .blackSmallSquare:
+			case .exclamationPoint, .greySmallSquare, .blackSmallSquare, .wrongWayCircle, .blackCircle, .whiteCircle, .redStrokeCircle:
 				/* Note: For the Windows Terminal and Console, we need a negative 1 space!
 				 * The output uses more space than most of the other emojis.
 				 * We could add one space to all other emojis but there is too much space if we do this,
