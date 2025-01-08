@@ -15,14 +15,19 @@ internal enum Emoji : String, CaseIterable {
 	case redCross               = "❌"
 	case policeLight            = "🚨"
 	case worm                   = "🐛"
-	case orangeDiamond          = "🔶"
 	
 	case ambulance              = "🚑"
 	case ladybug                = "🐞"
 	case monocle                = "🧐"
 	case greenCheck             = "✅"
 	case fearFace               = "😱"
-
+	
+	case greySmallSquare        = "◽️"
+	case blackSmallSquare       = "◾️"
+	case blueDiamond            = "🔷"
+	case orangeDiamond          = "🔶"
+	
+	case deepRedHeart           = "♥️"
 	case redHeart               = "❤️"
 	case orangeHeart            = "🧡"
 	case yellowHeart            = "💛"
@@ -43,15 +48,16 @@ internal enum Emoji : String, CaseIterable {
 		}
 		
 		switch self {
-			case .poo, .notebook, .eyebrow, .redCross, .policeLight, .worm, .orangeDiamond,
+			case .poo, .notebook, .eyebrow, .redCross, .policeLight, .worm,
 				  .orangeHeart, .yellowHeart, .greenHeart, .blueHeart, .purpleHeart,
 				  .blackHeart, .brownHeart, .whiteHeart:
 				return ""
 				
-			case .ambulance, .ladybug, .monocle, .greenCheck, .fearFace:
+			case .ambulance, .ladybug, .monocle, .greenCheck, .fearFace,
+				  .blueDiamond, .orangeDiamond:
 				return ""
 				
-			case .cog, .warning, .doubleExclamationPoint, .redHeart:
+			case .cog, .warning, .doubleExclamationPoint, .redHeart, .deepRedHeart:
 				guard !environment.isVSCode, environment != .macOSTerminal
 				else {return " "}
 				return ""
@@ -61,7 +67,7 @@ internal enum Emoji : String, CaseIterable {
 				else {return " "}
 				return ""
 				
-			case .exclamationPoint:
+			case .exclamationPoint, .greySmallSquare, .blackSmallSquare:
 				/* Note: For the Windows Terminal and Console, we need a negative 1 space!
 				 * The output uses more space than most of the other emojis.
 				 * We could add one space to all other emojis but there is too much space if we do this,
