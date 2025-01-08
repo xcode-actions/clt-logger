@@ -1,12 +1,10 @@
-= CLTLogger
-François Lamboley <francois.lamboley@happn.com>
-
+# CLTLogger
 A simple SwiftLog-compatible logger designed for Command Line Tools.
 
-== Usage
+## Usage
 TODO
 
-== Metadata Log Format
+## Metadata Log Format
 
 The metadata log format is very opinionated:
 
@@ -17,9 +15,8 @@ and so we do not quote neither backslash level0 keys;
 - Keys are sorted in the output, always.
 
 Example of logs:
-[code,txt]
-----
+```text
 ⚠️ [request_id: "42"] with some metadata
 ⚠️ [request_id: "42", service_id: "ldap"] with some metadata
 ⚠️ [faulty_wires: "[\"d\", \"a\", \"oops, has\\\"a quote\"]", request_id: "42", service_id: "ldap"] with some metadata
-----
+```
