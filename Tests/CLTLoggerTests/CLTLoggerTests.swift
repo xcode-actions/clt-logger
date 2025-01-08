@@ -8,8 +8,10 @@ import XCTest
 
 final class CLTLoggerTests : XCTestCase {
 	
+	static let defaultBootstrapFactory: @Sendable (String) -> any LogHandler = { _ in CLTLogger(multilineMode: .allMultiline) }
+	
 	override class func setUp() {
-		LoggingSystem.bootstrap{ _ in CLTLogger(multilineMode: .allMultiline) }
+		LoggingSystem.bootstrap(Self.defaultBootstrapFactory)
 	}
 	
 	/* From <https://apple.github.io/swift-log/docs/current/Logging/Protocols/LogHandler.html#treat-log-level-amp-metadata-as-values>. */
@@ -105,6 +107,8 @@ final class CLTLoggerTests : XCTestCase {
 			logger.debug(   "debug:    Example of text at this level.")
 			logger.trace(   "trace:    Example of text at this level.")
 		}
+		/* Reset factory. */
+		LoggingSystem.bootstrapInternal(Self.defaultBootstrapFactory)
 	}
 	
 }
