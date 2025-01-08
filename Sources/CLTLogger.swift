@@ -285,10 +285,6 @@ public extension CLTLogger {
 		let envVars = ProcessInfo.processInfo.environment
 		let outputEnvironment: OutputEnvironment = .detect(from: fh, envVars)
 		let emojiSet = EmojiSet.default(for: outputEnvironment)
-		/* To see all the emojis with the padding. If padding is correct, everything should be aligned. */
-		//for emoji in Emoji.allCases {
-		//	print("\(emoji.rawValue)\(emoji.padding(for: outputEnvironment)) |")
-		//}
 		return [
 			.trace:    addMeta(emojiSet.paddedEmoji(for: .trace,    in: outputEnvironment)),
 			.debug:    addMeta(emojiSet.paddedEmoji(for: .debug,    in: outputEnvironment)),
