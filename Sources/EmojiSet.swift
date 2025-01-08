@@ -10,6 +10,7 @@ internal enum EmojiSet : String, CaseIterable {
 	 The original set of emoji used in clt-logger.
 	 These work well in Terminal and Xcode (and on macOS generally, though not in VSCode). */
 	case original                  = "ORIGINAL"
+	case swiftyBeaver              = "SWIFTY_BEAVER"
 	case cleanroomLogger           = "CLEANROOM_LOGGER"
 	case vaibhavsingh97EmojiLogger = "VAIBHAVSINGH97_EMOJI_LOGGER"
 	
@@ -35,6 +36,17 @@ internal enum EmojiSet : String, CaseIterable {
 					case .info:     ret = .notebook
 					case .debug:    ret = .cog
 					case .trace:    ret = .poo
+				}
+				
+			case .swiftyBeaver:
+				switch logLevel {
+					case .critical: ret = .redSquare
+					case .error:    ret = .redSquare
+					case .warning:  ret = .yellowSquare
+					case .notice:   ret = .blueSquare /* Log level does not exist in upstream. */
+					case .info:     ret = .blueSquare
+					case .debug:    ret = .greenSquare
+					case .trace:    ret = .whiteSquare
 				}
 				
 			case .cleanroomLogger:
