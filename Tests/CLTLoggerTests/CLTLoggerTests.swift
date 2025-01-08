@@ -1,16 +1,17 @@
 import Foundation
 import XCTest
 
-import Logging
-
 @testable import CLTLogger
+@testable import Logging
 
 
 
 final class CLTLoggerTests : XCTestCase {
 	
+	static let defaultBootstrapFactory: @Sendable (String) -> any LogHandler = { _ in CLTLogger(multilineMode: .allMultiline) }
+	
 	override class func setUp() {
-		LoggingSystem.bootstrap{ _ in CLTLogger(multilineMode: .allMultiline) }
+		LoggingSystem.bootstrap(Self.defaultBootstrapFactory)
 	}
 	
 	/* From <https://apple.github.io/swift-log/docs/current/Logging/Protocols/LogHandler.html#treat-log-level-amp-metadata-as-values>. */
@@ -88,6 +89,26 @@ final class CLTLoggerTests : XCTestCase {
 		logger.error("A sneaky multiline\rhere is the second line")
 		logger.error("An utf8 multiline\u{0085}here is the second line")
 		logger.critical("YAM!\nhere is the second line\nand why not a third one", metadata: ["with": ["metadata", "again"], "because": "42"])
+	}
+	
+	func testBasicLogOutputWithAllEmojiSets() throws {
+		XCTAssertTrue(true, "We only want to see how the log look, so please see the logs.")
+		
+		for emojiSet in EmojiSet.allCases {
+			LoggingSystem.bootstrapInternal{ _ in CLTLogger(multilineMode: .allMultiline, constantsByLevel: CLTLogger.defaultConstantsByLogLevelForEmoji(on: .standardError, forcedEmojiSet: emojiSet)) }
+			try FileHandle.standardError.write(contentsOf: Data("\n***** \(emojiSet.rawValue) *****\n".utf8))
+			var logger = Logger(label: "my logger")
+			logger.logLevel = .trace
+			logger.critical("critical: Example of text at this level.")
+			logger.error(   "error:    Example of text at this level.")
+			logger.warning( "warning:  Example of text at this level.")
+			logger.notice(  "notice:   Example of text at this level.")
+			logger.info(    "info:     Example of text at this level.")
+			logger.debug(   "debug:    Example of text at this level.")
+			logger.trace(   "trace:    Example of text at this level.")
+		}
+		/* Reset factory. */
+		LoggingSystem.bootstrapInternal(Self.defaultBootstrapFactory)
 	}
 	
 }

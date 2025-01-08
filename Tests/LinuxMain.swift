@@ -8,6 +8,11 @@ var tests: [XCTestCaseEntry] = [
 		("testVisual1", CLTLoggerTests.testVisual1),
 		("testVisual2", CLTLoggerTests.testVisual2),
 		("testVisual3", CLTLoggerTests.testVisual3),
+		("testBasicLogOutputWithAllEmojiSets", CLTLoggerTests.testBasicLogOutputWithAllEmojiSets),
+	]),
+	testCase([
+		("testNoAlternateEmojiSetHasNoAlternates", EmojiTests.testNoAlternateEmojiSetHasNoAlternates),
+		("testEmojiAlignmentAndTextRenderingVisually", EmojiTests.testEmojiAlignmentAndTextRenderingVisually),
 	]),
 	testCase([
 		("testSGRParseFail", SGRTests.testSGRParseFail),
