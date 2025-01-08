@@ -62,10 +62,12 @@ internal enum Emoji : String, CaseIterable {
 				return ""
 				
 			case .exclamationPoint:
-				/* Note: For the Windows Terminal and Console, we’re a negative 1 space…
-				 # We ignore this special case and return an empty string. */
+				/* Note: For the Windows Terminal and Console, we need a negative 1 space!
+				 * The output uses more space than most of the other emojis.
+				 * We could add one space to all other emojis but there is too much space if we do this,
+				 *  so instead we ask the console to go back one char when outputting these emojis. */
 				guard !environment.isWindowsShell
-				else {return ""/*negative one space*/}
+				else {return Self.negativeOneSpace}
 				return ""
 				
 			case .greyHeart, .pinkHeart, .lightBlueHeart:
@@ -78,5 +80,8 @@ internal enum Emoji : String, CaseIterable {
 	func valueWithPadding(for environment: OutputEnvironment) -> String {
 		rawValue + padding(for: environment)
 	}
+	
+	/* See <https://gist.github.com/fnky/458719343aabd01cfb17a3a4f7296797#cursor-controls>. */
+	private static let negativeOneSpace: String = "\u{1B}[1D"
 	
 }
