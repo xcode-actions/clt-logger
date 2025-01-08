@@ -54,6 +54,18 @@ internal enum Emoji : String, CaseIterable {
 	case     redStrokeCircle = "⭕️"
 	case selectedRadioCircle = "🔘" /* Ugly on Windows… */
 	
+	case           redSquare = "🟥"
+	case        orangeSquare = "🟧"
+	case        yellowSquare = "🟨"
+	case         greenSquare = "🟩"
+	case          blueSquare = "🟦"
+	case        purpleSquare = "🟪"
+	case         blackSquare = "⬛️"
+	case         brownSquare = "🟫"
+	case         whiteSquare = "⬜️"
+	case   blackStrokeSquare = "🔲"
+	case   whiteStrokeSquare = "🔳"
+	
 	/* ⚠️ When this is modified, fallbacks in the EmojiSet enum should be verified. */
 	func rendersAsText(in environment: OutputEnvironment) -> Bool {
 		let textEmojis: Set<Emoji>
@@ -63,7 +75,7 @@ internal enum Emoji : String, CaseIterable {
 				return false
 				
 			case .windowsTerminal, .windowsConsole, .windowsUnknown:
-				textEmojis = [.doubleExclamationPoint, .greySmallSquare, .blackSmallSquare, .deepRedHeart, .redStrokeCircle]
+				textEmojis = [.doubleExclamationPoint, .greySmallSquare, .blackSmallSquare, .deepRedHeart, .redStrokeCircle, .blackSquare, .whiteSquare]
 				
 			case .macOSVSCode:   textEmojis = [.cog, .warning, .doubleExclamationPoint, .redHeart, .deepRedHeart, .greySmallSquare, .blackSmallSquare]
 			case .windowsVSCode: textEmojis = [.speaker, .doubleExclamationPoint, .deepRedHeart]
@@ -88,6 +100,10 @@ internal enum Emoji : String, CaseIterable {
 				  .purpleCircle, .brownCircle, .selectedRadioCircle:
 				return ""
 				
+			case .redSquare, .orangeSquare, .yellowSquare, .greenSquare, .blueSquare,
+				  .purpleSquare, .brownSquare, .blackStrokeSquare, .whiteStrokeSquare:
+				return ""
+				
 			case .ambulance, .ladybug, .monocle, .greenCheck, .fearFace,
 				  .blueDiamond, .orangeDiamond:
 				return ""
@@ -102,7 +118,7 @@ internal enum Emoji : String, CaseIterable {
 				else {return " "}
 				return ""
 				
-			case .exclamationPoint, .greySmallSquare, .blackSmallSquare, .wrongWayCircle, .blackCircle, .whiteCircle, .redStrokeCircle:
+			case .exclamationPoint, .greySmallSquare, .blackSmallSquare, .wrongWayCircle, .blackCircle, .whiteCircle, .redStrokeCircle, .blackSquare, .whiteSquare:
 				/* Note: For the Windows Terminal and Console, we need a negative 1 space!
 				 * The output uses more space than most of the other emojis.
 				 * We could add one space to all other emojis but there is too much space if we do this,
