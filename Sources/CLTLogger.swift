@@ -272,6 +272,11 @@ public extension CLTLogger {
 	}()
 	
 	static func defaultConstantsByLogLevelForEmoji(on fh: FileHandle) -> [Logger.Level: Constants] {
+		return defaultConstantsByLogLevelForEmoji(on: fh, forcedEmojiSet: nil)
+	}
+	
+	/* The forced emoji set is for the tests. */
+	internal static func defaultConstantsByLogLevelForEmoji(on fh: FileHandle, forcedEmojiSet: EmojiSet? = nil) -> [Logger.Level: Constants] {
 		func addMeta(_ paddedEmoji: String) -> Constants {
 			return .init(
 				logPrefix: paddedEmoji + " → ",
@@ -284,7 +289,7 @@ public extension CLTLogger {
 		}
 		let envVars = ProcessInfo.processInfo.environment
 		let outputEnvironment: OutputEnvironment = .detect(from: fh, envVars)
-		let emojiSet = EmojiSet.default(for: outputEnvironment)
+		let emojiSet = forcedEmojiSet ?? EmojiSet.default(for: outputEnvironment)
 		return [
 			.trace:    addMeta(emojiSet.paddedEmoji(for: .trace,    in: outputEnvironment)),
 			.debug:    addMeta(emojiSet.paddedEmoji(for: .debug,    in: outputEnvironment)),

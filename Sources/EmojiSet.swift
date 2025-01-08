@@ -4,7 +4,7 @@ import Logging
 
 
 
-internal enum EmojiSet : String {
+internal enum EmojiSet : String, CaseIterable {
 	
 	/**
 	 The original set of emoji used in clt-logger.
