@@ -2,7 +2,7 @@ import Foundation
 
 
 
-internal enum OutputEnvironment : String {
+internal enum OutputEnvironment : String, CaseIterable {
 	
 	case xcode = "XCODE"
 	
