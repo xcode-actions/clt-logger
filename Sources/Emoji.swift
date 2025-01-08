@@ -40,7 +40,24 @@ internal enum Emoji : String, CaseIterable {
 	case whiteHeart             = "🤍"
 	case pinkHeart              = "🩷"
 	case lightBlueHeart         = "🩵"
-
+	
+	func rendersAsText(in environment: OutputEnvironment) -> Bool {
+		let textEmojis: Set<Emoji>
+		switch environment {
+			case .xcode, .macOSTerminal, .macOSiTerm2, .macOSUnknown, .unknown:
+				/* All emojis are correct on these environments (or we don’t know and assume they are). */
+				return false
+				
+			case .windowsTerminal, .windowsConsole, .windowsUnknown:
+				textEmojis = [.doubleExclamationPoint, .greySmallSquare, .blackSmallSquare, .deepRedHeart]
+				
+			case .macOSVSCode:   textEmojis = [.cog, .warning, .doubleExclamationPoint, .redHeart, .deepRedHeart, .greySmallSquare, .blackSmallSquare]
+			case .windowsVSCode: textEmojis = [.speaker, .doubleExclamationPoint, .deepRedHeart]
+			case .unknownVSCode: return rendersAsText(in: .macOSVSCode) || rendersAsText(in: .windowsVSCode)
+		}
+		return textEmojis.contains(self)
+	}
+	
 	func padding(for environment: OutputEnvironment) -> String {
 		guard environment != .xcode else {
 			/* All emojis are correct on Xcode. */
