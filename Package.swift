@@ -14,7 +14,7 @@ let package = Package(
 	targets: [
 		.target(name: "CLTLogger", dependencies: [
 			.product(name: "Logging", package: "swift-log"),
-		], path: "Sources"),
+		], path: "Sources", exclude: ["CLTLogger+WithSendable.swift"]),
 		.testTarget(name: "CLTLoggerTests", dependencies: ["CLTLogger"])
 	]
 )
