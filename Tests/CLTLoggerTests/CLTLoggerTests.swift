@@ -8,10 +8,12 @@ import XCTest
 
 final class CLTLoggerTests : XCTestCase {
 	
+	static let multilineMode: CLTLogger.MultilineMode = .default
+	
 	override class func setUp() {
 		/* ⚠️ Also change in the testBasicLogOutputWithAllEmojiSets method if changed here.
 		 * We have not created a variable because we would have to use the @Sendable annotation, which we cannot as we support Swift 5.2. */
-		LoggingSystem.bootstrap{ _ in CLTLogger() }
+		LoggingSystem.bootstrap{ _ in CLTLogger(multilineMode: Self.multilineMode) }
 	}
 	
 	/* From <https://apple.github.io/swift-log/docs/current/Logging/Protocols/LogHandler.html#treat-log-level-amp-metadata-as-values>. */
@@ -95,7 +97,7 @@ final class CLTLoggerTests : XCTestCase {
 		XCTAssertTrue(true, "We only want to see how the log look, so please see the logs.")
 		
 		for emojiSet in EmojiSet.allCases {
-			LoggingSystem.bootstrapInternal{ _ in CLTLogger(constantsByLevel: CLTLogger.defaultConstantsByLogLevelForEmoji(on: .standardError, forcedEmojiSet: emojiSet)) }
+			LoggingSystem.bootstrapInternal{ _ in CLTLogger(multilineMode: Self.multilineMode, constantsByLevel: CLTLogger.defaultConstantsByLogLevelForEmoji(on: .standardError, forcedEmojiSet: emojiSet)) }
 			try FileHandle.standardError.write(contentsOf: Data("\n***** \(emojiSet.rawValue) *****\n".utf8))
 			var logger = Logger(label: "my logger")
 			logger.logLevel = .trace
@@ -109,7 +111,7 @@ final class CLTLoggerTests : XCTestCase {
 		}
 		/* Reset factory.
 		 * ⚠️ Also change in the setUp method if changed here. */
-		LoggingSystem.bootstrapInternal{ _ in CLTLogger() }
+		LoggingSystem.bootstrapInternal{ _ in CLTLogger(multilineMode: Self.multilineMode) }
 	}
 	
 }
