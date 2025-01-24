@@ -132,6 +132,11 @@ public struct CLTLogger : LogHandler {
 	public let multilineMode: MultilineMode
 	public let constantsByLevel: [Logger.Level: Constants]
 	
+	@Sendable
+	public init(label: String, metadataProvider: Logger.MetadataProvider? = LoggingSystem.metadataProvider) {
+		self.init(metadataProvider: metadataProvider)
+	}
+	
 	public init(fileHandle: FileHandle = .standardError, multilineMode: MultilineMode = .default, logStyle: Style = .auto, metadataProvider: Logger.MetadataProvider? = LoggingSystem.metadataProvider) {
 		let logPrefixStyle = (logStyle != .auto ? logStyle : CLTLogger.autoLogStyle(with: fileHandle))
 		
