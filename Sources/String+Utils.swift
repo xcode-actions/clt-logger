@@ -99,7 +99,8 @@ internal extension String {
 				prefix = ""
 			}
 			
-			if Self.newLines.contains(scalar) {
+			let isNewLine = Self.newLines.contains(scalar)
+			if isNewLine {
 				hasProcessedNewLines = true
 				switch newLineProcessing {
 					case .none:           return prefix + String(scalar)
@@ -123,7 +124,7 @@ internal extension String {
 						specialCharState = (scalar, 0)
 						return prefix + ""
 					}
-					let escaped = scalar.escaped(asASCII: asASCII)
+					let escaped = scalar.escaped(asASCII: asASCII || isNewLine)
 //#if swift(>=5.4)
 //					return prefix + (octothorpLevel == 0 ? escaped : escaped.replacingOccurrences(of: #"\"#, with: #"\"# + octothorps, options: .literal))
 //#else
