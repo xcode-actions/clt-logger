@@ -94,7 +94,7 @@ public struct CLTLogger : LogHandler {
 		/** Multiline logs are allowed and logs are printed after the log, one line per metadata (metadata are never multiline). */
 		case allMultiline
 		
-		public static let `default` = Self.disallowMultiline
+		public static let `default` = Self.disallowMultilineButMetadataOnNewLines
 	}
 	
 	public struct Constants : CLTLogger_Sendable {

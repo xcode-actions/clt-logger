@@ -117,4 +117,24 @@ final class StringEscapingTests : XCTestCase {
 		XCTAssertEqual(actual, expected)
 	}
 	
+	func testEscapingUtf8Line1() throws {
+		let actual = "weird\u{0085}newline"
+			.processForLogging(
+				escapingMode: .escapeScalars(octothorpLevel: 0, showQuotes: false),
+				newLineProcessing: .escape
+			).string
+		let expected = #"weird\u{0085}newline"#
+		XCTAssertEqual(actual, expected)
+	}
+	
+	func testEscapingUtf8Line2() throws {
+		let actual = "weird\u{0085}newline"
+			.processForLogging(
+				escapingMode: .escapeScalars(octothorpLevel: 0, showQuotes: false),
+				newLineProcessing: .replace(replacement: "yolo")
+			).string
+		let expected = #"weirdyolonewline"#
+		XCTAssertEqual(actual, expected)
+	}
+	
 }
