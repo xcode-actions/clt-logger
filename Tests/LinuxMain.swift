@@ -34,4 +34,10 @@ var tests: [XCTestCaseEntry] = [
 		("testBackslashEscape", StringEscapingTests.testBackslashEscape),
 	]),
 ]
+#if !os(WASI)
 XCTMain(tests)
+
+#else
+await XCTMain(tests)
+
+#endif
