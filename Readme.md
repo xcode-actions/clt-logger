@@ -1,6 +1,6 @@
 # ⚙️ CLTLogger (**C**ommand-**L**ine **T**ools Logger)
 
-<picture><img alt="Compatible from Swift 5.2 to 6." src="https://img.shields.io/badge/Swift-6.0_%7C_5.10--5.2-blue"></picture>
+<picture><img alt="Compatible from Swift 5.1 to 6." src="https://img.shields.io/badge/Swift-6.0_%7C_5.10--5.1-blue"></picture>
 <picture><img alt="Compatible with macOS, Linux, Windows, iOS, visionOS, tvOS and watchOS." src="https://img.shields.io/badge/Platforms-macOS_%7C_Linux_%7C_Windows_%7C_iOS_%7C_visionOS_%7C_tvOS_%7C_watchOS-blue"></picture>
 [![](<https://img.shields.io/github/v/release/xcode-actions/clt-logger>)](<https://github.com/xcode-actions/clt-logger/releases>)
 
