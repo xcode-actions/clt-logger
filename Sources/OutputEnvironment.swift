@@ -42,7 +42,7 @@ internal enum OutputEnvironment : String, CaseIterable {
 			return OutputEnvironment(rawValue: envStr) ?? .unknown
 		}
 		
-#if !os(Windows)
+#if canImport(Darwin)
 		/* Let’s detect Xcode. */
 		if isatty(fh.fileDescriptor) != 0 && tcgetpgrp(fh.fileDescriptor) == -1 && errno == ENOTTY {
 			return .xcode

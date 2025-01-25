@@ -217,11 +217,13 @@ public struct CLTLogger : LogHandler {
 			 * (When Package.swift is built we can check if the value of the __CFBundleIdentifier env var is "com.apple.dt.Xcode".)
 			 * The solution we’re currently using is to check whether the fd on which we write has a foreground process group as Xcode does not set one. 
 			 * Note: If Xcode detection is changed here, it should also be changed in defaultConstantsByLogLevelForEmoji. */
+ #if canImport(Darwin)
 			if tcgetpgrp(fh.fileDescriptor) == -1 && errno == ENOTTY {
 				/* We log using emojis in Xcode. */
 				return .emoji
 			}
-			/* If the TERM env var is not set we assume colors are not supported and return the text logging style. 
+ #endif
+			/* If the TERM env var is not set we assume colors are not supported and return the text logging style.
 			 * In theory we should use the curses database to check for colors (ncurses has the `has_colors` function for this). */
 			return (ProcessInfo.processInfo.environment["TERM"] == nil ? .text : .color)
 		}
