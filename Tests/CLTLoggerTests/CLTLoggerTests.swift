@@ -91,6 +91,8 @@ final class CLTLoggerTests : XCTestCase {
 		var logger = Logger(label: "my logger")
 		logger.logLevel = .trace
 		logger.warning("Single line log")
+		logger.notice("A line with \\#(escaped) characters")
+		logger.notice("A log with a metadata whose key has a newline", metadata: ["new\nline": "yolo\nnow"])
 		logger.trace("Mutli-line\nlog.\nHow does it feel?", metadata: ["with": "metadata"])
 		logger.debug("Another multiline\nhere is the second line")
 		logger.info("Another multiline\nhere is the second line")
