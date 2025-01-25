@@ -67,13 +67,22 @@ final class CLTLoggerTests : XCTestCase {
 		
 		var logger = Logger(label: "my logger")
 		logger.logLevel = .trace
-		logger.trace(   "trace:    Example of text at this level. Isn’t it amazing?")
-		logger.debug(   "debug:    Example of text at this level. Isn’t it amazing?")
-		logger.info(    "info:     Example of text at this level. Isn’t it amazing?")
-		logger.notice(  "notice:   Example of text at this level. Isn’t it amazing?")
-		logger.warning( "warning:  Example of text at this level. Isn’t it amazing?")
-		logger.error(   "error:    Example of text at this level. Isn’t it amazing?")
-		logger.critical("critical: Example of text at this level. Isn’t it amazing?")
+		
+		CLTLogger.write(Data("\n".utf8), to: .standardError)
+		
+		logger.trace(   "trace:    Example of a log at this level. Isn’t it amazing?")
+		logger.debug(   "debug:    Example of a log at this level. Isn’t it amazing?")
+		logger.info(    "info:     Example of a log at this level. Isn’t it amazing?")
+		logger.notice(  "notice:   Example of a log at this level. Isn’t it amazing?")
+		logger.warning( "warning:  Example of a log at this level. Isn’t it amazing?")
+		logger.error(   "error:    Example of a log at this level. Isn’t it amazing?")
+		logger.critical("critical: Example of a log at this level. Isn’t it amazing?")
+		
+		CLTLogger.write(Data("\n".utf8), to: .standardError)
+		
+		logger.info("An informational message with metadata.", metadata: ["component": "LoggerTester", "array-value": .array(["1", "2", "3"]), "dictionary-value": .dictionary(["key1": "value1", "key2": "value2", "key3": "value3"])])
+		
+		CLTLogger.write(Data("\n".utf8), to: .standardError)
 	}
 	
 	func testVisual3() {
@@ -82,6 +91,8 @@ final class CLTLoggerTests : XCTestCase {
 		var logger = Logger(label: "my logger")
 		logger.logLevel = .trace
 		logger.warning("Single line log")
+		logger.notice("A line with \\#(escaped) characters")
+		logger.notice("A log with a metadata whose key has a newline", metadata: ["new\nline": "yolo\nnow"])
 		logger.trace("Mutli-line\nlog.\nHow does it feel?", metadata: ["with": "metadata"])
 		logger.debug("Another multiline\nhere is the second line")
 		logger.info("Another multiline\nhere is the second line")
