@@ -1,3 +1,6 @@
+#if canImport(Android)
+import Android
+#endif
 import Foundation
 #if canImport(WinSDK)
 import WinSDK
