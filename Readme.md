@@ -124,7 +124,7 @@ The name is self-documented here.
 
 ### Log Style
 
-You can force using a specific log style and ignore the `CLTLOGGER_LOG_STYLE` environment variable.
+You can force the use of a specific log style and ignore the `CLTLOGGER_LOG_STYLE` environment variable.
 This is not recommended.
 
 ### Configuring Everything
@@ -161,15 +161,15 @@ We wanted a log format that fit the following constraints:
   - We have made it so that all logs can be put safely in a `#""#` quoted string in Swift directly by just copy-pasting the log.
   - By default there is exactly one line for a log, even if the logged string contains a new line (the newline is escaped).
     Note this is configurable and multi-line logs are properly supported too.
-  - Also by default, after the log line there is the metadata lines with exactly one line per metadata entry.
+  - Also by default, after the log line come the metadata lines, with exactly one line per metadata entry.
     This is configurable too, though multi-line metadata has been purposefully not enabled (we might enable it later if needed).
 - Configurable:
-  - The `CLTLOGGER_LOG_STYLE` environment variable can be set to force `CLTLogger` to differentiate the log level using:
+  - The `CLTLOGGER_LOG_STYLE` environment variable can be set to force `CLTLogger` to differentiate the log levels using:
     - Colors with value `color`;
     - Emojis with value `emoji`;
     - Plain text with value `text`;
     - No differentiation with value `none`.
-  - The `CLTLOGGER_EMOJI_SET_NAME` environment variable can be set to use different set of emojis when logging using emojis.
+  - The `CLTLOGGER_EMOJI_SET_NAME` environment variable can be set to use a different set of emojis when logging using emojis.
     Supported sets are:
     ```text
     ORIGINAL:                    ‼️ - ❗️ - ⚠️ - 🗣 - 📔 - ⚙️ - 💩
@@ -180,7 +180,7 @@ We wanted a log format that fit the following constraints:
     ```
     
     Some emojis might change depending on your environment because sometimes emojis are not displayed correctly.
-    Only the `NO_ALTERNATES` set is guaranteed to be the same everywhere.
+    Only the `NO_ALTERNATES` set is guaranteed to look the same everywhere.
   - The `CLTLOGGER_OUTPUT_ENV` environment variable can be set to make `CLTLogger` assume the given environment in which it is running.
     Supported values are:
     - `XCODE`
@@ -196,6 +196,6 @@ We wanted a log format that fit the following constraints:
     - `UNKNOWN`
     
     This is mostly useful if `CLTLogger` runs in an unknown environment
-     (e.g. in a Docker it’s nigh impossible to know the output will be read in Apple Terminal or something else).
+     (e.g. in a Docker it’s almost impossible to know the output will be read in Apple Terminal or something else).
     
     The output environment is currently only used to fix alignments and other edge cases when logging using emojis.
