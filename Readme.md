@@ -25,20 +25,20 @@ _Note: The screenshots match the system theme (Dark vs. Light mode)._
 	<img    src   ="./Docs/Screens/cltlogger-terminal-metadata-new-lines-light.png" width="526" alt="CLTLogger Log Example.">
 </picture>
 
-### In a Terminal, With Log and Metadata On the Same Line
-
-<picture>
-	<source srcset="./Docs/Screens/cltlogger-terminal-metadata-same-lines-dark.png"  width="1226" media="(prefers-color-scheme: dark)">
-	<source srcset="./Docs/Screens/cltlogger-terminal-metadata-same-lines-light.png" width="1226" media="(prefers-color-scheme: light)">
-	<img    src   ="./Docs/Screens/cltlogger-terminal-metadata-same-lines-light.png" width="1226" alt="CLTLogger Log Example.">
-</picture>
-
 ### In Xcode
 
 <picture>
 	<source srcset="./Docs/Screens/cltlogger-xcode-dark.png"  width="479" media="(prefers-color-scheme: dark)">
 	<source srcset="./Docs/Screens/cltlogger-xcode-light.png" width="479" media="(prefers-color-scheme: light)">
 	<img    src   ="./Docs/Screens/cltlogger-xcode-light.png" width="479" alt="CLTLogger Log Example.">
+</picture>
+
+### In a Terminal, With Log and Metadata On the Same Line
+
+<picture>
+	<source srcset="./Docs/Screens/cltlogger-terminal-metadata-same-lines-dark.png"  width="1226" media="(prefers-color-scheme: dark)">
+	<source srcset="./Docs/Screens/cltlogger-terminal-metadata-same-lines-light.png" width="1226" media="(prefers-color-scheme: light)">
+	<img    src   ="./Docs/Screens/cltlogger-terminal-metadata-same-lines-light.png" width="1226" alt="CLTLogger Log Example.">
 </picture>
 
 ## Common Bootstrap Customization 🧰
