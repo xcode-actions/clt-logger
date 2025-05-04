@@ -22,6 +22,11 @@ final class EmojiTests : XCTestCase {
 		}
 	}
 	
+#if swift(>=5.2) || (!os(macOS) && !os(iOS) && !os(tvOS) && !os(watchOS))
+	@available(macOS 10.15.4, *)
+	@available(iOS 13.4, *)
+	@available(tvOS 13.4, *)
+	@available(watchOS 6.2, *)
 	func testEmojiAlignmentAndTextRenderingVisually() throws {
 		let envVars = ProcessInfo.processInfo.environment
 		let outputEnvironment: OutputEnvironment = .detect(from: .standardError, envVars)
@@ -30,5 +35,6 @@ final class EmojiTests : XCTestCase {
 			try FileHandle.standardError.write(contentsOf: Data((lineStr + "\n").utf8))
 		}
 	}
+#endif
 	
 }

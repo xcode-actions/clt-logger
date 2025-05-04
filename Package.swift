@@ -4,7 +4,12 @@ import PackageDescription
 
 let package = Package(
 	name: "clt-logger",
-	/* Not sure how to test for platforms for Swift pre-5.8; let’s not do it. */
+	platforms: [
+		.macOS(.v10_15),
+		.tvOS(.v13),
+		.iOS(.v13),
+		.watchOS(.v6),
+	],
 	products: [
 		.library(name: "CLTLogger", targets: ["CLTLogger"]),
 	],
