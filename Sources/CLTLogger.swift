@@ -189,7 +189,17 @@ public struct CLTLogger : LogHandler {
 			/* Is the write retried on interrupt?
 			 * We’ll assume yes, but we don’t and can’t know for sure
 			 *  until FileHandle has been migrated to the open-source Foundation. */
-			_ = try? fh.write(contentsOf: data)
+			if #available(macOS 10.15.4, iOS 13.4, tvOS 13.4, watchOS 6.2, *) {
+#if swift(>=5.2) || (!os(macOS) && !os(iOS) && !os(tvOS) && !os(watchOS))
+				_ = try? fh.write(contentsOf: data)
+#else
+				/* Note: This throws an actual objc exception if it fails. */
+				fh.write(data)
+#endif
+			} else {
+				/* Note: This throws an actual objc exception if it fails. */
+				fh.write(data)
+			}
 		}
 	}
 	

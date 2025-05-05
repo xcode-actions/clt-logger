@@ -104,6 +104,11 @@ final class CLTLoggerTests : XCTestCase {
 		logger.critical("YAM!\nhere is the second line\nand why not a third one", metadata: ["with": ["metadata", "again"], "because": "42"])
 	}
 	
+#if swift(>=5.2) || (!os(macOS) && !os(iOS) && !os(tvOS) && !os(watchOS))
+	@available(macOS 10.15.4, *)
+	@available(iOS 13.4, *)
+	@available(tvOS 13.4, *)
+	@available(watchOS 6.2, *)
 	func testBasicLogOutputWithAllEmojiSets() throws {
 		XCTAssertTrue(true, "We only want to see how the log look, so please see the logs.")
 		
@@ -124,5 +129,6 @@ final class CLTLoggerTests : XCTestCase {
 		 * ⚠️ Also change in the setUp method if changed here. */
 		LoggingSystem.bootstrapInternal{ _ in CLTLogger(multilineMode: Self.multilineMode) }
 	}
+#endif
 	
 }
