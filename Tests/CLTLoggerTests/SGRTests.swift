@@ -6,6 +6,7 @@ import XCTest
 
 
 /* TODO: A lot more tests! */
+@available(macOS 10.15, iOS 13.0, *)
 final class SGRTests : XCTestCase {
 	
 	func testSGRParseFail() {
