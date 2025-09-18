@@ -7,12 +7,6 @@ let swiftSettings: [SwiftSetting] = [.enableExperimentalFeature("StrictConcurren
 
 let package = Package(
 	name: "clt-logger",
-	platforms: [
-		.macOS(.v11),
-		.tvOS(.v14),
-		.iOS(.v14),
-		.watchOS(.v7),
-	],
 	products: [
 		.library(name: "CLTLogger", targets: ["CLTLogger"]),
 	],

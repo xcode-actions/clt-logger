@@ -15,9 +15,9 @@ import Foundation
  - [The 8-bits colors table (direct image link)](<https://i.stack.imgur.com/KTSQa.png>);
  - [List of Terminals supporting True Colors](<https://gist.github.com/XVilka/8346728>);
  - [The ODA Specs](<https://en.wikipedia.org/wiki/Open_Document_Architecture#External_links>) aka. CCITT T.411-T.424 (equivalent to ISO 8613, but freely downloadable). */
-public struct SGR : RawRepresentable, Hashable, CustomStringConvertible {
+public struct SGR : Hashable, CustomStringConvertible {
 	
-	public enum Modifier : RawRepresentable, Hashable, CustomStringConvertible {
+	public enum Modifier : Hashable, CustomStringConvertible {
 		
 		/** Reset/Normal -- All attributes off. */
 		case reset
@@ -303,7 +303,7 @@ public struct SGR : RawRepresentable, Hashable, CustomStringConvertible {
 		 Not standard (equivalent to `.bgColorTo4BitWhite` + `.bold` + `.reverseVideo` IIUC). */
 		case bgColorTo4BitBrightWhite
 		
-		public struct ColorSpaceInfo {
+		public struct ColorSpaceInfo : Hashable {
 			
 			/**
 			 - Note: I did not know the type for this one, so I assumed `Int`. */
@@ -315,7 +315,7 @@ public struct SGR : RawRepresentable, Hashable, CustomStringConvertible {
 			public var colorSpaceToleranceAsString: String? {colorSpaceTolerance.flatMap{ "\($0)" }}
 			public var colorSpaceAssociatedWithToleranceAsString: String? {colorSpaceAssociatedWithTolerance.flatMap{ "\($0.rawValue)" }}
 			
-			public enum ColorSpaceForTolerance : Int {
+			public enum ColorSpaceForTolerance : Int, Hashable {
 				case cieluv = 0
 				case cielab = 1
 			}
@@ -441,7 +441,8 @@ public struct SGR : RawRepresentable, Hashable, CustomStringConvertible {
 			}
 		}
 		
-		public init?(rawValue: String) {
+		@available(macOS 10.15, iOS 13.0, *)
+		init?(rawValue: String) {
 			let s = Scanner(forParsing: rawValue)
 			
 			self.init(scanner: s)
@@ -451,7 +452,8 @@ public struct SGR : RawRepresentable, Hashable, CustomStringConvertible {
 			}
 		}
 		
-		/* Note: This init probably has terrible perfs. */
+		/* Note: This init probably has terrible perfs, which is why it is internal (only used in the tests). */
+		@available(macOS 10.15, iOS 13.0, *)
 		init?(scanner: Scanner) {
 			struct DummyError : Error {}
 			let originalScannerIndex = scanner.currentIndex
@@ -743,7 +745,8 @@ public struct SGR : RawRepresentable, Hashable, CustomStringConvertible {
 		self.modifiers = modifiers
 	}
 	
-	public init?(rawValue: String) {
+	@available(macOS 10.15, iOS 13.0, *)
+	init?(rawValue: String) {
 		let s = Scanner(forParsing: rawValue)
 		
 		self.init(scanner: s)
@@ -754,6 +757,7 @@ public struct SGR : RawRepresentable, Hashable, CustomStringConvertible {
 	}
 	
 	/* For symetry w/ SGR.Modifier init, but not really needed, at least for now. */
+	@available(macOS 10.15, iOS 13.0, *)
 	init?(scanner: Scanner) {
 		struct DummyError : Error {}
 		let originalScannerIndex = scanner.currentIndex
