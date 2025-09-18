@@ -6,14 +6,15 @@ import XCTest
 
 
 /* TODO: A lot more tests! */
-@available(macOS 10.15, iOS 13.0, *)
 final class SGRTests : XCTestCase {
 	
+	@available(macOS 10.15, iOS 13.0, *)
 	func testSGRParseFail() {
 		XCTAssertNil(SGR(rawValue: "\(escape)[38;2;255;255m"))
 		XCTAssertNil(SGR(rawValue: "\(escape)[38;2;255;255;+1m"))
 	}
 	
+	@available(macOS 10.15, iOS 13.0, *)
 	func testSGRParse() {
 		XCTAssertEqual(SGR(rawValue: "\(escape)[m"), SGR(.reset))
 		XCTAssertEqual(SGR(rawValue: "\(escape)[0m"), SGR(.reset))
@@ -26,6 +27,7 @@ final class SGRTests : XCTestCase {
 		XCTAssertEqual(SGR(rawValue: "\(escape)[38;2;255;255;m"), SGR(.fgColorToRGB(red: 0xFF, green: 0xFF, blue: 0x00)))
 	}
 	
+	@available(macOS 10.15, iOS 13.0, *)
 	func testMultipleSGRParse() {
 		XCTAssertEqual(SGR(rawValue: "\(escape)[38;5;7;m"), SGR(.fgColorTo256PaletteValue(7), .reset))
 		XCTAssertEqual(SGR(rawValue: "\(escape)[38;2;255;255;0;m"), SGR(.fgColorToRGB(red: 0xFF, green: 0xFF, blue: 0x00), .reset))
