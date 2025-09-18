@@ -15,9 +15,9 @@ import Foundation
  - [The 8-bits colors table (direct image link)](<https://i.stack.imgur.com/KTSQa.png>);
  - [List of Terminals supporting True Colors](<https://gist.github.com/XVilka/8346728>);
  - [The ODA Specs](<https://en.wikipedia.org/wiki/Open_Document_Architecture#External_links>) aka. CCITT T.411-T.424 (equivalent to ISO 8613, but freely downloadable). */
-public struct SGR : Hashable, CustomStringConvertible {
+public struct SGR : Hashable, CustomStringConvertible, CLTLogger_Sendable {
 	
-	public enum Modifier : Hashable, CustomStringConvertible {
+	public enum Modifier : Hashable, CustomStringConvertible, CLTLogger_Sendable {
 		
 		/** Reset/Normal -- All attributes off. */
 		case reset
@@ -303,7 +303,7 @@ public struct SGR : Hashable, CustomStringConvertible {
 		 Not standard (equivalent to `.bgColorTo4BitWhite` + `.bold` + `.reverseVideo` IIUC). */
 		case bgColorTo4BitBrightWhite
 		
-		public struct ColorSpaceInfo : Hashable {
+		public struct ColorSpaceInfo : Hashable, CLTLogger_Sendable {
 			
 			/**
 			 - Note: I did not know the type for this one, so I assumed `Int`. */
@@ -315,7 +315,7 @@ public struct SGR : Hashable, CustomStringConvertible {
 			public var colorSpaceToleranceAsString: String? {colorSpaceTolerance.flatMap{ "\($0)" }}
 			public var colorSpaceAssociatedWithToleranceAsString: String? {colorSpaceAssociatedWithTolerance.flatMap{ "\($0.rawValue)" }}
 			
-			public enum ColorSpaceForTolerance : Int, Hashable {
+			public enum ColorSpaceForTolerance : Int, Hashable, CLTLogger_Sendable {
 				case cieluv = 0
 				case cielab = 1
 			}
