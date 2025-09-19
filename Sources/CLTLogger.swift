@@ -175,11 +175,11 @@ public struct CLTLogger : LogHandler {
 		/* We compute the data to print outside of the lock. */
 		let data = Self.format(message: message.description, flatMetadata: effectiveFlatMetadata, multilineMode: multilineMode, constants: constants)
 		
-		Self.write(data, to: outputFileHandle)
+		Self.writeLog(data, to: outputFileHandle)
 	}
 	
 	/** Writes to the given file descriptor like the logger would. */
-	public static func write(_ data: Data, to fh: FileHandle) {
+	public static func writeLog(_ data: Data, to fh: FileHandle) {
 		/* We lock, because the writeAll function might split the write in more than 1 write
 		 *  (if the write system call only writes a part of the data).
 		 * If another part of the program writes to the file descriptor, we might get interleaved data,
@@ -189,17 +189,28 @@ public struct CLTLogger : LogHandler {
 			/* Is the write retried on interrupt?
 			 * We’ll assume yes, but we don’t and can’t know for sure
 			 *  until FileHandle has been migrated to the open-source Foundation. */
-			if #available(macOS 10.15.4, iOS 13.4, tvOS 13.4, watchOS 6.2, *) {
-#if swift(>=5.2) || (!os(macOS) && !os(iOS) && !os(tvOS) && !os(watchOS))
+#if canImport(Darwin)
+			if #available(macOS 10.15.4, tvOS 13.4, iOS 13.4, watchOS 6.2, *) {
 				_ = try? fh.write(contentsOf: data)
-#else
-				/* Note: This throws an actual objc exception if it fails. */
-				fh.write(data)
-#endif
 			} else {
-				/* Note: This throws an actual objc exception if it fails. */
-				fh.write(data)
+				/* Let’s write “manullay” (FileHandle’s write(_:) method throws an ObjC exception in case of an error. */
+				data.withUnsafeBytes{ bytes in
+					guard !bytes.isEmpty else {
+						return
+					}
+					var written: Int = 0
+					repeat {
+						written += write(
+							fh.fileDescriptor,
+							bytes.baseAddress!.advanced(by: written),
+							bytes.count - written
+						)
+					} while written < bytes.count && (errno == EINTR || errno == EAGAIN)
+				}
 			}
+#else
+			_ = try? fh.write(contentsOf: data)
+#endif
 		}
 	}
 	
