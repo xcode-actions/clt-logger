@@ -4,12 +4,6 @@ import PackageDescription
 
 let package = Package(
 	name: "clt-logger",
-	platforms: [
-		.macOS(.v10_15),
-		.tvOS(.v13),
-		.iOS(.v13),
-		.watchOS(.v6),
-	],
 	products: [
 		.library(name: "CLTLogger", targets: ["CLTLogger"]),
 	],
