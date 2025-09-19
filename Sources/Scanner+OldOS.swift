@@ -82,9 +82,13 @@ extension Scanner {
 		if #available(macOS 10.15, tvOS 13.0, iOS 13.0, watchOS 6.0, *) {
 			return scanCharacter()
 		} else {
-			let character = string[string.index(string.startIndex, offsetBy: scanLocation)]
+			guard !isAtEnd else {
+				return nil
+			}
+			let utf16 = string.utf16
+			let characterStr = utf16[utf16.index(utf16.startIndex, offsetBy: scanLocation)..<utf16.index(utf16.startIndex, offsetBy: scanLocation + 1)]
 			var result: NSString?
-			guard scanString(String(character), into: &result) else {return nil}
+			guard scanString(String(characterStr)!, into: &result) else {return nil}
 			return Character(result! as String)
 		}
 #else
