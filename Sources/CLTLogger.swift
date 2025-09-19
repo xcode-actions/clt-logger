@@ -189,11 +189,29 @@ public struct CLTLogger : LogHandler {
 			/* Is the write retried on interrupt?
 			 * We’ll assume yes, but we don’t and can’t know for sure
 			 *  until FileHandle has been migrated to the open-source Foundation. */
-#if canImport(Darwin)
 			if #available(macOS 10.15.4, tvOS 13.4, iOS 13.4, watchOS 6.2, *) {
+#if swift(>=5.2) || !canImport(Darwin)
 				_ = try? fh.write(contentsOf: data)
+#else
+				/* Let’s write “manullay” (FileHandle’s write(_:) method throws an ObjC exception in case of an error).
+				 * This code is copied below. */
+				data.withUnsafeBytes{ bytes in
+					guard !bytes.isEmpty else {
+						return
+					}
+					var written: Int = 0
+					repeat {
+						written += write(
+							fh.fileDescriptor,
+							bytes.baseAddress!.advanced(by: written),
+							bytes.count - written
+						)
+					} while written < bytes.count && (errno == EINTR || errno == EAGAIN)
+				}
+#endif
 			} else {
-				/* Let’s write “manullay” (FileHandle’s write(_:) method throws an ObjC exception in case of an error. */
+				/* Let’s write “manullay” (FileHandle’s write(_:) method throws an ObjC exception in case of an error).
+				 * This is a copy of the code just above. */
 				data.withUnsafeBytes{ bytes in
 					guard !bytes.isEmpty else {
 						return
@@ -208,9 +226,6 @@ public struct CLTLogger : LogHandler {
 					} while written < bytes.count && (errno == EINTR || errno == EAGAIN)
 				}
 			}
-#else
-			_ = try? fh.write(contentsOf: data)
-#endif
 		}
 	}
 	
