@@ -15,9 +15,9 @@ import Foundation
  - [The 8-bits colors table (direct image link)](<https://i.stack.imgur.com/KTSQa.png>);
  - [List of Terminals supporting True Colors](<https://gist.github.com/XVilka/8346728>);
  - [The ODA Specs](<https://en.wikipedia.org/wiki/Open_Document_Architecture#External_links>) aka. CCITT T.411-T.424 (equivalent to ISO 8613, but freely downloadable). */
-public struct SGR : Hashable, CustomStringConvertible, CLTLogger_Sendable {
+public struct SGR : RawRepresentable, Hashable, CustomStringConvertible, CLTLogger_Sendable {
 	
-	public enum Modifier : Hashable, CustomStringConvertible, CLTLogger_Sendable {
+	public enum Modifier : RawRepresentable, Hashable, CustomStringConvertible, CLTLogger_Sendable {
 		
 		/** Reset/Normal -- All attributes off. */
 		case reset
@@ -441,8 +441,7 @@ public struct SGR : Hashable, CustomStringConvertible, CLTLogger_Sendable {
 			}
 		}
 		
-		@available(macOS 10.15, iOS 13.0, *)
-		init?(rawValue: String) {
+		public init?(rawValue: String) {
 			let s = Scanner(forParsing: rawValue)
 			
 			self.init(scanner: s)
@@ -452,23 +451,22 @@ public struct SGR : Hashable, CustomStringConvertible, CLTLogger_Sendable {
 			}
 		}
 		
-		/* Note: This init probably has terrible perfs, which is why it is internal (only used in the tests). */
-		@available(macOS 10.15, iOS 13.0, *)
+		/* Note: This init probably has terrible perfs. */
 		init?(scanner: Scanner) {
 			struct DummyError : Error {}
-			let originalScannerIndex = scanner.currentIndex
+			let originalScanLocation = scanner.compatibleScanLocation
 			do {
 				enum ColorDestination : String {
 					case fg = "38"
 					case bg = "48"
 					case ul = "58"
 				}
-				let token = scanner.scanUpToCharacters(from: CharacterSet(charactersIn: String(Self.separatorChar) + String(SGR.sgrEndChar))) ?? ""
+				let token = scanner.xl_scanUpToCharacters(from: CharacterSet(charactersIn: String(Self.separatorChar) + String(SGR.sgrEndChar))) ?? ""
 				if token.contains(":") {
 					/* Let’s process the special ODA cases. */
 					let subScanner = Scanner(forParsing: token)
-					let subToken = subScanner.scanUpToString(":") ?? ""
-					_ = subScanner.scanString(":")! /* !: The string contains a colon, so the scan cannot fail. */
+					let subToken = subScanner.xl_scanUpToString(":") ?? ""
+					_ = subScanner.xl_scanString(":")! /* !: The string contains a colon, so the scan cannot fail. */
 					
 					let isFgColor: Bool
 					switch subToken {
@@ -479,7 +477,7 @@ public struct SGR : Hashable, CustomStringConvertible, CLTLogger_Sendable {
 							 * Note however, it might be possible to get the 58 case too (underline color), though because it is not part of the ODA it shouldn’t be valid with this notation. */
 							throw DummyError()
 					}
-					let colorFormat = subScanner.scanUpToString(":") ?? ""
+					let colorFormat = subScanner.xl_scanUpToString(":") ?? ""
 					switch colorFormat {
 						case "0", "":
 							guard isFgColor, subScanner.isAtEnd else {
@@ -501,10 +499,10 @@ public struct SGR : Hashable, CustomStringConvertible, CLTLogger_Sendable {
 					func scanParam() throws -> Int? {
 						if subScanner.isAtEnd {return nil}
 						else {
-							guard subScanner.scanString(":") != nil else {
+							guard subScanner.xl_scanString(":") != nil else {
 								throw DummyError()
 							}
-							guard let str = subScanner.scanUpToString(":") else {
+							guard let str = subScanner.xl_scanUpToString(":") else {
 								return nil
 							}
 							/* We assume “+1” is a valid value. */
@@ -581,9 +579,9 @@ public struct SGR : Hashable, CustomStringConvertible, CLTLogger_Sendable {
 				}
 				if let colorDestination = ColorDestination(rawValue: token) {
 					guard
-						scanner.scanCharacter() == Self.separatorChar,
-						let colorType = scanner.scanCharacter(),
-						scanner.scanCharacter() == Self.separatorChar
+						scanner.xl_scanCharacter() == Self.separatorChar,
+						let colorType = scanner.xl_scanCharacter(),
+						scanner.xl_scanCharacter() == Self.separatorChar
 					else {
 						throw DummyError()
 					}
@@ -602,11 +600,11 @@ public struct SGR : Hashable, CustomStringConvertible, CLTLogger_Sendable {
 							/* Wikipedia says empty values are treated as 0.
 							 * But Terminal for instance does not seem to know that.
 							 * We don’t care, we do like Wikipedia says. */
-							let r = try uint8(scanner.scanUpToString(String(Self.separatorChar)) ?? "0")
-							guard scanner.scanCharacter() == Self.separatorChar else {throw DummyError()}
-							let g = try uint8(scanner.scanUpToString(String(Self.separatorChar)) ?? "0")
-							guard scanner.scanCharacter() == Self.separatorChar else {throw DummyError()}
-							let b = try uint8(scanner.scanUpToString(String(Self.separatorChar)) ?? "0")
+							let r = try uint8(scanner.xl_scanUpToString(String(Self.separatorChar)) ?? "0")
+							guard scanner.xl_scanCharacter() == Self.separatorChar else {throw DummyError()}
+							let g = try uint8(scanner.xl_scanUpToString(String(Self.separatorChar)) ?? "0")
+							guard scanner.xl_scanCharacter() == Self.separatorChar else {throw DummyError()}
+							let b = try uint8(scanner.xl_scanUpToString(String(Self.separatorChar)) ?? "0")
 							switch colorDestination {
 								case .fg: self = .fgColorToRGB(red: r, green: g, blue: b); return
 								case .bg: self = .bgColorToRGB(red: r, green: g, blue: b); return
@@ -614,7 +612,7 @@ public struct SGR : Hashable, CustomStringConvertible, CLTLogger_Sendable {
 							}
 							
 						case "5":
-							let v = try uint8(scanner.scanUpToString(String(Self.separatorChar)) ?? "0")
+							let v = try uint8(scanner.xl_scanUpToString(String(Self.separatorChar)) ?? "0")
 							switch colorDestination {
 								case .fg: self = .fgColorTo256PaletteValue(v); return
 								case .bg: self = .bgColorTo256PaletteValue(v); return
@@ -709,7 +707,7 @@ public struct SGR : Hashable, CustomStringConvertible, CLTLogger_Sendable {
 					default: throw DummyError()
 				}
 			} catch {
-				scanner.currentIndex = originalScannerIndex
+				scanner.compatibleScanLocation = originalScanLocation
 				return nil
 			}
 		}
@@ -745,8 +743,7 @@ public struct SGR : Hashable, CustomStringConvertible, CLTLogger_Sendable {
 		self.modifiers = modifiers
 	}
 	
-	@available(macOS 10.15, iOS 13.0, *)
-	init?(rawValue: String) {
+	public init?(rawValue: String) {
 		let s = Scanner(forParsing: rawValue)
 		
 		self.init(scanner: s)
@@ -757,21 +754,20 @@ public struct SGR : Hashable, CustomStringConvertible, CLTLogger_Sendable {
 	}
 	
 	/* For symetry w/ SGR.Modifier init, but not really needed, at least for now. */
-	@available(macOS 10.15, iOS 13.0, *)
 	init?(scanner: Scanner) {
 		struct DummyError : Error {}
-		let originalScannerIndex = scanner.currentIndex
+		let originalScanLocation = scanner.compatibleScanLocation
 		do {
 			guard
-				scanner.scanCharacter() == Self.escapeChar,
-				scanner.scanCharacter() == Self.csiChar
+				scanner.xl_scanCharacter() == Self.escapeChar,
+				scanner.xl_scanCharacter() == Self.csiChar
 			else {
 				/* Not a CSI. */
 				throw DummyError()
 			}
 			
-			let csiContent = scanner.scanUpToCharacters(from: Self.possibleFinalByte) ?? ""
-			guard scanner.scanCharacter() == Self.sgrEndChar else {
+			let csiContent = scanner.xl_scanUpToCharacters(from: Self.possibleFinalByte) ?? ""
+			guard scanner.xl_scanCharacter() == Self.sgrEndChar else {
 				/* Not an SGR. */
 				throw DummyError()
 			}
@@ -785,7 +781,7 @@ public struct SGR : Hashable, CustomStringConvertible, CLTLogger_Sendable {
 				/* A modifier has been parsed.
 				 * Either scan location is now at a semicolon or at the end.
 				 * If on semicolon we must consume it. */
-				let c = contentScanner.scanCharacter()
+				let c = contentScanner.xl_scanCharacter()
 				assert(c == Modifier.separatorChar)
 			}
 			guard contentScanner.isAtEnd else {
@@ -793,7 +789,7 @@ public struct SGR : Hashable, CustomStringConvertible, CLTLogger_Sendable {
 				throw DummyError()
 			}
 		} catch {
-			scanner.currentIndex = originalScannerIndex
+			scanner.compatibleScanLocation = originalScanLocation
 			return nil
 		}
 	}
