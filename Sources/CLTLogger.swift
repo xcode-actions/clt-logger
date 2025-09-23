@@ -201,11 +201,19 @@ public struct CLTLogger : LogHandler {
 					}
 					var written: Int = 0
 					repeat {
+#if !os(Windows)
 						written += write(
 							fh.fileDescriptor,
 							bytes.baseAddress!.advanced(by: written),
 							bytes.count - written
 						)
+#else
+						written += Int(write(
+							fh.fileDescriptor,
+							bytes.baseAddress!.advanced(by: written),
+							UInt32(bytes.count - written)
+						))
+#endif
 					} while written < bytes.count && (errno == EINTR || errno == EAGAIN)
 				}
 #endif
@@ -218,11 +226,19 @@ public struct CLTLogger : LogHandler {
 					}
 					var written: Int = 0
 					repeat {
+#if !os(Windows)
 						written += write(
 							fh.fileDescriptor,
 							bytes.baseAddress!.advanced(by: written),
 							bytes.count - written
 						)
+#else
+						written += Int(write(
+							fh.fileDescriptor,
+							bytes.baseAddress!.advanced(by: written),
+							UInt32(bytes.count - written)
+						))
+#endif
 					} while written < bytes.count && (errno == EINTR || errno == EAGAIN)
 				}
 			}
