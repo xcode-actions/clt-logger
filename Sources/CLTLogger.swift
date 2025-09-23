@@ -192,7 +192,7 @@ public struct CLTLogger : LogHandler {
 			if #available(macOS 10.15.4, tvOS 13.4, iOS 13.4, watchOS 6.2, *) {
 #if swift(>=5.2) || !canImport(Darwin)
 				_ = try? fh.write(contentsOf: data)
-#else
+#elseif !os(Windows)
 				/* Let’s write “manually” (FileHandle’s write(_:) method throws an ObjC exception in case of an error).
 				 * This code is copied below. */
 				data.withUnsafeBytes{ bytes in
@@ -201,6 +201,8 @@ public struct CLTLogger : LogHandler {
 					}
 					var written: Int = 0
 					repeat {
+						/* Note: Windows version takes an UInt32 for the number of bytes to write and returns an Int32.
+						 *       It does not matter, fh.fileDescriptor is not accessible on Windows anyways… */
 						written += write(
 							fh.fileDescriptor,
 							bytes.baseAddress!.advanced(by: written),
@@ -208,8 +210,11 @@ public struct CLTLogger : LogHandler {
 						)
 					} while written < bytes.count && (errno == EINTR || errno == EAGAIN)
 				}
+#else
+ #error("How can we get here? We can import Darwin, but we are on Windows??")
 #endif
 			} else {
+#if !os(Windows)
 				/* Let’s write “manually” (FileHandle’s write(_:) method throws an ObjC exception in case of an error).
 				 * This is a copy of the code just above. */
 				data.withUnsafeBytes{ bytes in
@@ -218,6 +223,8 @@ public struct CLTLogger : LogHandler {
 					}
 					var written: Int = 0
 					repeat {
+						/* Note: Windows version takes an UInt32 for the number of bytes to write and returns an Int32.
+						 *       It does not matter, fh.fileDescriptor is not accessible on Windows anyways… */
 						written += write(
 							fh.fileDescriptor,
 							bytes.baseAddress!.advanced(by: written),
@@ -225,6 +232,9 @@ public struct CLTLogger : LogHandler {
 						)
 					} while written < bytes.count && (errno == EINTR || errno == EAGAIN)
 				}
+#else
+				fatalError("Unreachable code reached: In else of #available with only Apple platforms checks, but also on Windows.")
+#endif
 			}
 		}
 	}
