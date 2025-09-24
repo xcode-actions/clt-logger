@@ -2,6 +2,12 @@
 .DS_Store
 xcuserdata/
 
+# In a lib, [committing the Package.resolved file is not very interesting](<https://forums.swift.org/t/14699/33>).
+# An interesting suggestion from the thread is to commit a Package.resolved file wiht the oldest version supported of the dependencies pinned.
+# This allows making sure our lib works with the oldest version of the dependencies we support.
+# In theory, if semver is properly followed by our dependencies this should not be needed.
+/Package.resolved
+
 # The SPM build folder
 /.build/
 # This folder is used by SPM when a package is put in “edit” mode (`swift
