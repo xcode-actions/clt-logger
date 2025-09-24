@@ -16,11 +16,11 @@ import Logging
  A few things:
  + Output is UTF8. Always.
  + There is no buffering. We use `write(2)`.
- + Ouptuts to stderr by default.
+ + Outputs to stderr by default.
  The idea is: “usable” text (text that is actually what the user asked for when launching your tool) should be output to stdout,
   presumably using `print`, the rest should be on stderr.
  If needed you can setup the logger to use any file descriptor (via a FileHandle), the logger will simply `write(2)` to it.
- + Ouptut has special control chars for colors if the output fd is a tty and Xcode is not detected.
+ + Output has special control chars for colors if the output fd is a tty and Xcode is not detected.
  You can force using or force not using colors.
  + If the write syscall fails, the log is lost (or partially lost; interrupts are retried; see SystemPackage for more info).
  + You can configure the logger not to automatically add a new line after each message.
